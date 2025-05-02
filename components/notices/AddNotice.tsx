@@ -22,7 +22,7 @@ export default function AddNotice() {
     setDate(new Date().toISOString().slice(0, 10));
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: any) => {
     e.preventDefault();
     const data = {
       title,
