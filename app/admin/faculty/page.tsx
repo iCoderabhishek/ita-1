@@ -12,6 +12,8 @@ import {
   GraduationCap,
 } from "lucide-react";
 import Image from "next/image";
+import EditFaculty from "@/components/faculty/EditFaculty";
+import { toast } from "sonner";
 
 // Dummy faculty data
 const faculty = [
@@ -62,6 +64,8 @@ const faculty = [
   },
 ];
 
+const fetchAllFaculty = () => {};
+
 export default function FacultyPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("All");
@@ -94,6 +98,17 @@ export default function FacultyPage() {
           Add New Faculty
         </button>
       </div>
+
+      {/* Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50  flex items-center justify-center bg-black/40">
+          <EditFaculty
+            onClose={() => setShowAddModal(false)}
+            getAllFaculty={fetchAllFaculty}
+            showToastMessage={(msg) => toast.success(msg)}
+          />
+        </div>
+      )}
 
       {/* Search and Filter */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">

@@ -4,6 +4,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Search, Pencil, Trash2, AlertCircle } from "lucide-react";
 import { redirect } from "next/navigation";
+import AddEditNotice from "@/components/notices/AddNotice";
+import { toast } from "sonner";
 
 // Dummy notices data
 const notices = [
@@ -28,6 +30,8 @@ const notices = [
   // Add more notices...
 ];
 
+const fetchNotices = () => {};
+
 export default function NoticesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -51,14 +55,24 @@ export default function NoticesPage() {
           </p>
         </div>
         <button
-          // onClick={() => setShowAddModal(true)}
-          onClick={() => redirect("/admin/add-notice")}
+          onClick={() => setShowAddModal(true)}
           className="mt-4 md:mt-0 flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
         >
           <Plus className="h-5 w-5 mr-2" />
           Add New Notice
         </button>
       </div>
+
+      {/* Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <AddEditNotice
+            onClose={() => setShowAddModal(false)}
+            getAllNotices={fetchNotices}
+            showToastMessage={(msg) => toast.success(msg)}
+          />
+        </div>
+      )}
 
       {/* Search and Filter */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">

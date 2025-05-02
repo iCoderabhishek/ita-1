@@ -4,40 +4,42 @@ import { useState, useEffect } from "react";
 import { Switch } from "../ui/switch";
 import { X } from "lucide-react";
 
-interface AddEditNoticeProps {
+interface AddEditStudyMaterialProps {
   onClose: () => void;
   showToastMessage?: (msg: string) => void;
-  getAllNotices?: () => void;
-  noticeData?: any;
+  getAllStudyMaterials?: () => void;
+  StudyMaterialData?: any;
   type?: "add" | "edit";
 }
 
-export default function AddEditNotice({
+export default function AddEditStudyMaterial({
   onClose,
   showToastMessage,
-  getAllNotices,
-  noticeData,
+  getAllStudyMaterials,
+  StudyMaterialData,
   type = "add",
-}: AddEditNoticeProps) {
-  const [title, setTitle] = useState(noticeData?.title || "");
-  const [important, setImportant] = useState(noticeData?.important || false);
+}: AddEditStudyMaterialProps) {
+  const [title, setTitle] = useState(StudyMaterialData?.title || "");
+  const [important, setImportant] = useState(
+    StudyMaterialData?.important || false
+  );
   const [categories, setCategories] = useState([
-    "Admission",
-    "Exams",
-    "Events",
-    "Results",
+    "Notes",
+    "Book",
+    "Short Notes",
+    "Extras",
   ]);
   const [selectedCategory, setSelectedCategory] = useState(
-    noticeData?.category || "Admission"
+    StudyMaterialData?.category || "Admission"
   );
   const [newCategory, setNewCategory] = useState("");
-  const [content, setContent] = useState(noticeData?.content || "");
-  const [link, setLink] = useState(noticeData?.link || "");
+  const [content, setContent] = useState(StudyMaterialData?.content || "");
+  const [link, setLink] = useState(StudyMaterialData?.link || "");
   const [date, setDate] = useState("");
 
   useEffect(() => {
-    setDate(noticeData?.date || new Date().toISOString().slice(0, 10));
-  }, [noticeData]);
+    setDate(StudyMaterialData?.date || new Date().toISOString().slice(0, 10));
+  }, [StudyMaterialData]);
 
   useEffect(() => {
     const handleEsc = (e: any) => {
@@ -59,16 +61,19 @@ export default function AddEditNotice({
       link,
     };
 
-    console.log(`${type === "edit" ? "Editing" : "Adding"} notice:`, data);
+    console.log(
+      `${type === "edit" ? "Editing" : "Adding"} StudyMaterial:`,
+      data
+    );
 
     // Placeholder logic
     if (type === "edit") {
-      showToastMessage?.("Notice updated successfully!");
+      showToastMessage?.("StudyMaterial updated successfully!");
     } else {
-      showToastMessage?.("Notice added successfully!");
+      showToastMessage?.("StudyMaterial added successfully!");
     }
 
-    getAllNotices?.();
+    getAllStudyMaterials?.();
     onClose();
   };
 
@@ -89,7 +94,7 @@ export default function AddEditNotice({
       </button>
 
       <h2 className="text-2xl font-semibold text-gray-800">
-        {type === "edit" ? "Edit Notice" : "Add Notice"}
+        {type === "edit" ? "Edit Study Material" : "Add Study Material"}
       </h2>
 
       <div>
@@ -105,14 +110,9 @@ export default function AddEditNotice({
         />
       </div>
 
-      <div className="flex items-center justify-between">
-        <label className="text-gray-700 font-medium">Mark as Important</label>
-        <Switch checked={important} onCheckedChange={setImportant} />
-      </div>
-
       <div>
         <label className="block mb-2 text-sm font-medium text-gray-700">
-          Select Category<span className="text-red-500">*</span>
+          Type<span className="text-red-500">*</span>
         </label>
         <div className="flex flex-wrap gap-2">
           {categories.map((cat) => (
@@ -163,7 +163,39 @@ export default function AddEditNotice({
 
       <div>
         <label className="block mb-1 text-sm font-medium text-gray-700">
-          Notice Link (PDF)<span className="text-red-500">*</span>
+          Semester<span className="text-red-500">*</span>
+        </label>
+        <select
+          value={link}
+          onChange={(e) => setLink(e.target.value)}
+          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Select Semester</option>
+          <option value="1">Semester -1 </option>
+          <option value="2">Semester -2 </option>
+          <option value="3">Semester -3 </option>
+          <option value="4">Semester -4 </option>
+          <option value="5">Semester -5 </option>
+          <option value="6">Semester -6 </option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block mb-1 text-sm font-medium text-gray-700">
+          Publisher Name<span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          value={link}
+          onChange={(e) => setLink(e.target.value)}
+          placeholder="Enter the publisher's name"
+          className="w-full p-3 border border-gray-300 rounded-lg"
+        />
+      </div>
+
+      <div>
+        <label className="block mb-1 text-sm font-medium text-gray-700">
+          Study Material Link (PDF)<span className="text-red-500">*</span>
         </label>
         <input
           type="url"
@@ -178,7 +210,7 @@ export default function AddEditNotice({
         onClick={handleSubmit}
         className="w-full py-3 px-6 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
       >
-        {type === "edit" ? "Update Notice" : "Add Notice"}
+        {type === "edit" ? "Update StudyMaterial" : "Add StudyMaterial"}
       </button>
     </div>
   );

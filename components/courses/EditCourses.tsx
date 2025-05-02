@@ -4,23 +4,23 @@ import { useState, useEffect } from "react";
 import { Switch } from "../ui/switch";
 import { X } from "lucide-react";
 
-interface EditProjectProps {
+interface EditCourseProps {
   onClose: () => void;
   showToastMessage?: (msg: string) => void;
-  getAllProjects?: () => void;
-  ProjectData?: any;
+  getAllCourses?: () => void;
+  CourseData?: any;
   type?: "add" | "edit";
 }
 
-export default function EditProject({
+export default function EditCourse({
   onClose,
   showToastMessage,
-  getAllProjects,
-  ProjectData,
+  getAllCourses,
+  CourseData,
   type = "add",
-}: EditProjectProps) {
-  const [title, setTitle] = useState(ProjectData?.title || "");
-  const [important, setImportant] = useState(ProjectData?.important || false);
+}: EditCourseProps) {
+  const [title, setTitle] = useState(CourseData?.title || "");
+  const [important, setImportant] = useState(CourseData?.important || false);
   const [categories, setCategories] = useState([
     "AI",
     "Energy",
@@ -29,19 +29,19 @@ export default function EditProject({
     "Web",
   ]);
   const [selectedCategory, setSelectedCategory] = useState(
-    ProjectData?.category || []
+    CourseData?.category || []
   );
   const [newCategory, setNewCategory] = useState("");
-  const [content, setContent] = useState(ProjectData?.content || "");
-  const [link, setLink] = useState(ProjectData?.link || "");
+  const [content, setContent] = useState(CourseData?.content || "");
+  const [link, setLink] = useState(CourseData?.link || "");
   const [date, setDate] = useState("");
   const [department, setDepartment] = useState("");
   const [newMember, setNewMember] = useState("");
   const [teamMembers, setTeamMembers] = useState<string[]>([]);
 
   useEffect(() => {
-    setDate(ProjectData?.date || new Date().toISOString().slice(0, 10));
-  }, [ProjectData]);
+    setDate(CourseData?.date || new Date().toISOString().slice(0, 10));
+  }, [CourseData]);
 
   useEffect(() => {
     const handleEsc = (e: any) => {
@@ -63,16 +63,16 @@ export default function EditProject({
       link,
     };
 
-    console.log(`${type === "edit" ? "Editing" : "Adding"} Project:`, data);
+    console.log(`${type === "edit" ? "Editing" : "Adding"} Course:`, data);
 
     // Placeholder logic
     if (type === "edit") {
-      showToastMessage?.("Project updated successfully!");
+      showToastMessage?.("Course updated successfully!");
     } else {
-      showToastMessage?.("Project added successfully!");
+      showToastMessage?.("Course added successfully!");
     }
 
-    getAllProjects?.();
+    getAllCourses?.();
     onClose();
   };
 
@@ -106,26 +106,22 @@ export default function EditProject({
       </button>
 
       <h2 className="text-2xl font-semibold text-gray-800">
-        {type === "edit" ? "Edit Project" : "Add Project"}
+        {type === "edit" ? "Edit Course" : "Add Course"}
       </h2>
 
+      {/* Course Title */}
       <div>
         <label className="block mb-1 text-sm font-medium text-gray-700">
-          Title<span className="text-red-500">*</span>
+          Course Title<span className="text-red-500">*</span>
         </label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full p-3 border border-gray-300  text-xl rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full p-3 border border-gray-300 text-xl rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
         />
       </div>
-
-      {/* <div className="flex items-center justify-between">
-        <label className="text-gray-700 font-medium">Mark as Important</label>
-        <Switch checked={important} onCheckedChange={setImportant} />
-      </div> */}
 
       {/* Department */}
       <div>
@@ -144,48 +140,25 @@ export default function EditProject({
         </select>
       </div>
 
-      <div>
-        <label className="block mb-2 text-sm font-medium text-gray-700">
-          Select Category<span className="text-red-500">*</span>
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {categories.map((cat) => (
-            <button
-              type="button"
-              key={cat}
-              onClick={() => toggleCategory(cat)}
-              className={`px-3 py-1 rounded-full border text-sm transition ${
-                selectedCategory.includes(cat)
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+      {/* intake */}
 
-        <div className="mt-3 flex flex-col sm:flex-row gap-2">
-          <input
-            type="text"
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-            placeholder="Add new category"
-            className="flex-1 p-2 border border-gray-300 rounded-lg"
-          />
-          <button
-            type="button"
-            onClick={handleAddCategory}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            Add
-          </button>
-        </div>
+      <label className="block mb-1 text-sm font-medium text-gray-700">
+        Total Intake<span className="text-red-500">*</span>
+      </label>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <input
+          type="number"
+          value={newMember}
+          onChange={(e) => setNewMember(e.target.value)}
+          placeholder="No. of seats to intake"
+          className="flex-1 p-2 border border-gray-300 rounded-lg"
+        />
       </div>
 
+      {/* Course Description */}
       <div>
         <label className="block mb-1 text-sm font-medium text-gray-700">
-          Content<span className="text-red-500">*</span>
+          Course Description<span className="text-red-500">*</span>
         </label>
         <textarea
           value={content}
@@ -195,53 +168,48 @@ export default function EditProject({
         />
       </div>
 
-      {/* Team Members */}
+      {/* Coordinator */}
       <div>
         <label className="block mb-1 text-sm font-medium text-gray-700">
-          Team Members
+          Add Coordinator<span className="text-red-500">*</span>
         </label>
         <div className="flex flex-col sm:flex-row gap-2">
           <input
             type="text"
             value={newMember}
             onChange={(e) => setNewMember(e.target.value)}
-            placeholder="Enter member name"
+            placeholder="Enter coordinator name"
             className="flex-1 p-2 border border-gray-300 rounded-lg"
           />
-          <button
-            type="button"
-            onClick={handleAddMember}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-          >
-            Add Member
-          </button>
         </div>
-        <ul className="mt-2 mb-2  list-disc list-inside text-gray-700 space-y-1">
+        <ul className="mt-2 mb-2 list-disc list-inside text-gray-700 space-y-1">
           {teamMembers.map((member, idx) => (
             <li key={idx}>{member}</li>
           ))}
         </ul>
-
-        <div>
-          <label className="block mb-1 pt-4 text-sm font-medium text-gray-700">
-            Project Link (Optional)
-          </label>
-          <input
-            type="url"
-            value={link}
-            onChange={(e) => setLink(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-          />
-        </div>
-
-        <button
-          type="button"
-          onClick={handleSubmit}
-          className="w-full py-3 px-6 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
-        >
-          {type === "edit" ? "Update Project" : "Add Project"}
-        </button>
       </div>
+
+      {/* Course Link */}
+      <div>
+        <label className="block mb-1 text-sm font-medium text-gray-700">
+          Course Link (Optional)
+        </label>
+        <input
+          type="url"
+          value={link}
+          onChange={(e) => setLink(e.target.value)}
+          className="w-full p-3 border border-gray-300 rounded-lg"
+        />
+      </div>
+
+      {/* Submit Button */}
+      <button
+        type="button"
+        onClick={handleSubmit}
+        className="w-full py-3 px-6 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
+      >
+        {type === "edit" ? "Update Course" : "Add Course"}
+      </button>
     </div>
   );
 }

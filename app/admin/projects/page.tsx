@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import { Plus, Search, Pencil, Trash2, Tag, Users } from "lucide-react";
 import Image from "next/image";
 import { redirect } from "next/navigation";
+import EditProject from "@/components/projects/EditProject";
+import { toast } from "sonner";
 
 // Dummy projects data
 const projects = [
@@ -33,6 +35,8 @@ const projects = [
   // Add more projects...
 ];
 
+const fetchAllProjects = () => {};
+
 export default function ProjectsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -59,6 +63,17 @@ export default function ProjectsPage() {
           Add New Project
         </button>
       </div>
+
+      {/* Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50  flex items-center justify-center bg-black/40">
+          <EditProject
+            onClose={() => setShowAddModal(false)}
+            getAllProjects={fetchAllProjects}
+            showToastMessage={(msg) => toast.success(msg)}
+          />
+        </div>
+      )}
 
       {/* Search and Filter */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">

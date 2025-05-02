@@ -11,6 +11,8 @@ import {
   Users,
   Clock,
 } from "lucide-react";
+import EditCourses from "@/components/courses/EditCourses";
+import { toast } from "sonner";
 
 // Dummy courses data
 const courses = [
@@ -64,6 +66,8 @@ const courses = [
   },
 ];
 
+const fetchAllCourses = () => {};
+
 export default function CoursesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -94,6 +98,17 @@ export default function CoursesPage() {
           Add New Course
         </button>
       </div>
+
+      {/* Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50  flex items-center justify-center bg-black/40">
+          <EditCourses
+            onClose={() => setShowAddModal(false)}
+            getAllCourses={fetchAllCourses}
+            showToastMessage={(msg) => toast.success(msg)}
+          />
+        </div>
+      )}
 
       {/* Search */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">

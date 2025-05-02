@@ -11,6 +11,8 @@ import {
   Download,
   ExternalLink,
 } from "lucide-react";
+import AddEditStudyMaterial from "@/components/study-material/EditStudyMaterial";
+import { toast } from "sonner";
 
 // Dummy study materials data
 const materials = [
@@ -70,6 +72,7 @@ const departments = [
   "Electronics and Telecommunication",
 ];
 
+const fetchAllStudyMaterials = () => {};
 export default function StudyMaterialsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState("All Types");
@@ -114,6 +117,17 @@ export default function StudyMaterialsPage() {
           Add New Material
         </button>
       </div>
+
+      {/* Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50  flex items-center justify-center bg-black/40">
+          <AddEditStudyMaterial
+            onClose={() => setShowAddModal(false)}
+            getAllStudyMaterials={fetchAllStudyMaterials}
+            showToastMessage={(msg) => toast.success(msg)}
+          />
+        </div>
+      )}
 
       {/* Search and Filters */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">
