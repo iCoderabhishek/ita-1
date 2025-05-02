@@ -111,7 +111,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/contact"
+                  href="/login"
                   className="text-gray-300 hover:text-white transition-colors duration-300 flex items-center"
                 >
                   <FolderLock className="h-4 w-4 mr-2" />
