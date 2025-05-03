@@ -2,10 +2,12 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/firebase";
+import { useRouter } from "next/navigation";
 
 export function useAdminAuth() {
   const [loading, setLoading] = useState(true);
 const [user, setUser] = useState<User | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -13,7 +15,7 @@ const [user, setUser] = useState<User | null>(null);
       setLoading(false);
 
       if (!user) {
-        window.location.href = "/login"; // ✅ Avoids flashing UI
+        router.push("/login");
       }
     });
 

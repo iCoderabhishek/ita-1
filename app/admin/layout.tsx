@@ -16,7 +16,11 @@ export default function AdminLayout({
   const pathname = usePathname();
   const { user, loading } = useAdminAuth();
 
-  if (loading || !user) return null; // ⛔ Prevent rendering too early
+  if (loading)
+    return (
+      <div className="flex items-center justify-center mt-10">loading...</div>
+    );
+  if (!user) return null; // ⛔ Prevent rendering too early
 
   return (
     <div className="min-h-screen bg-gray-100 pt-8">
