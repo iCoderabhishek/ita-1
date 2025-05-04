@@ -15,11 +15,17 @@ export default function ClientLayoutWrapper({
   const isAdmin = pathname.startsWith("/admin");
   const { user, loading } = useAdminAuth(); // Authentication hook for admin
 
+  if (loading) return null; // or a spinner if you want
+
   return (
     <>
-      {user && isAdmin && <Header />}
+      <Header />
       {children}
-      {user && isAdmin && <Footer />}
+      <Footer />
+
+      {/* {!isAdmin && <Header />}
+      {children}
+      {!isAdmin && <Footer />} */}
     </>
   );
 }

@@ -1,26 +1,33 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Switch } from "../ui/switch";
+import { Switch } from "@/components/ui/switch";
 import { X } from "lucide-react";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import axiosInstance from "@/lib/axiosInstance";
+import { toast } from "sonner";
 
 interface AddEditNoticeProps {
   onClose: () => void;
-  showToastMessage?: (msg: string) => void;
   getAllNotices?: () => void;
   noticeData?: any;
   type?: "add" | "edit";
+  onUpdate?: any;
+  showToastMessage?: any;
 }
 
 export default function AddEditNotice({
   onClose,
-  showToastMessage,
+  onUpdate,
   getAllNotices,
   noticeData,
   type = "add",
+  showToastMessage,
 }: AddEditNoticeProps) {
   const [title, setTitle] = useState(noticeData?.title || "");
-  const [important, setImportant] = useState(noticeData?.important || false);
+  const [isImportant, setIsImportant] = useState(
+    noticeData?.isImportant || false
+  );
   const [categories, setCategories] = useState([
     "Admission",
     "Exams",
@@ -32,7 +39,8 @@ export default function AddEditNotice({
   );
   const [newCategory, setNewCategory] = useState("");
   const [content, setContent] = useState(noticeData?.content || "");
-  const [link, setLink] = useState(noticeData?.link || "");
+  const [noticeLink, setNoticeLink] = useState(noticeData?.noticeLink || "");
+  const [createdBy, setCreatedBy] = useState(noticeData?.createdBy || "");
   const [date, setDate] = useState("");
 
   useEffect(() => {
@@ -40,41 +48,67 @@ export default function AddEditNotice({
   }, [noticeData]);
 
   useEffect(() => {
-    const handleEsc = (e: any) => {
+    const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         onClose();
       }
     };
     document.addEventListener("keydown", handleEsc);
     return () => document.removeEventListener("keydown", handleEsc);
+  }, [onClose]);
+
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCreatedBy(user.displayName || user.email || user.uid);
+      }
+    });
+    return () => unsubscribe();
   }, []);
 
   const handleSubmit = async () => {
-    const data = {
-      title,
-      date,
-      important,
-      category: selectedCategory,
-      content,
-      link,
-    };
-
-    console.log(`${type === "edit" ? "Editing" : "Adding"} notice:`, data);
-
-    // Placeholder logic
-    if (type === "edit") {
-      showToastMessage?.("Notice updated successfully!");
-    } else {
-      showToastMessage?.("Notice added successfully!");
+    if (!title || !content) {
+      toast.error("Title and content are required!");
+      return;
     }
 
-    getAllNotices?.();
-    onClose();
+    const data = {
+      title,
+      content,
+      category: selectedCategory,
+      isImportant,
+      noticeLink: noticeLink || "",
+      createdBy,
+      date,
+      id: noticeData?.id, // included only for edit
+    };
+
+    try {
+      if (type === "edit") {
+        await axiosInstance.put("/notices", data); // Update existing notice
+        toast.success("Notice updated successfully!");
+      } else {
+        await axiosInstance.post("/notices", data); // Add new notice
+        toast.success("Notice added successfully!");
+      }
+
+      if (getAllNotices) {
+        getAllNotices();
+      }
+      onClose();
+    } catch (error: any) {
+      console.error("Failed to submit notice:", error);
+      toast.error(
+        error.response?.data?.error || "Failed to submit notice. Try again."
+      );
+    }
   };
 
   const handleAddCategory = () => {
     if (newCategory && !categories.includes(newCategory)) {
       setCategories((prev) => [...prev, newCategory]);
+      setSelectedCategory(newCategory);
       setNewCategory("");
     }
   };
@@ -85,7 +119,7 @@ export default function AddEditNotice({
         className="absolute top-3 right-3 text-gray-500 hover:text-red-500"
         onClick={onClose}
       >
-        <X className="text-2xl" />
+        <X className="h-5 w-5" />
       </button>
 
       <h2 className="text-2xl font-semibold text-gray-800">
@@ -107,7 +141,7 @@ export default function AddEditNotice({
 
       <div className="flex items-center justify-between">
         <label className="text-gray-700 font-medium">Mark as Important</label>
-        <Switch checked={important} onCheckedChange={setImportant} />
+        <Switch checked={isImportant} onCheckedChange={setIsImportant} />
       </div>
 
       <div>
@@ -167,8 +201,8 @@ export default function AddEditNotice({
         </label>
         <input
           type="url"
-          value={link}
-          onChange={(e) => setLink(e.target.value)}
+          value={noticeLink}
+          onChange={(e) => setNoticeLink(e.target.value)}
           className="w-full p-3 border border-gray-300 rounded-lg"
         />
       </div>

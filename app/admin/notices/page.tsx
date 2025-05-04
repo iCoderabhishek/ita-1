@@ -1,46 +1,67 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Search, Pencil, Trash2, AlertCircle } from "lucide-react";
 import { redirect } from "next/navigation";
 import AddEditNotice from "@/components/notices/AddNotice";
 import { toast } from "sonner";
-
-// Dummy notices data
-const notices = [
-  {
-    id: 1,
-    title: "Admission Open for 2025-2026 Session",
-    content:
-      "Applications are invited from eligible candidates for admission to the Diploma in Engineering programs.",
-    category: "Admission",
-    important: true,
-    date: "2025-05-01",
-  },
-  {
-    id: 2,
-    title: "End Semester Examination Schedule",
-    content:
-      "The End Semester Examination for 6th Semester will commence from May 10, 2025.",
-    category: "Examination",
-    important: true,
-    date: "2025-04-15",
-  },
-  // Add more notices...
-];
-
-const fetchNotices = () => {};
+import axiosInstance from "@/lib/axiosInstance";
 
 export default function NoticesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [notices, setNotices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedNotice, setSelectedNotice] = useState(null);
+
+  const [onUpdate, setOnUpdate] = useState();
+  const fetchNotices = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/notices", { cache: "no-store" });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to fetch notices");
+      }
+
+      setNotices(data.notices);
+      setError("");
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = (notice: any) => {
+    setSelectedNotice(notice);
+    setEditModalOpen(true);
+  };
+  const fetchNoticesAgain = () => {};
+
+  const handleDelete = async (id: string) => {
+    try {
+      await axiosInstance.delete(`/api/notices/${id}`); // adjust your route
+      toast.success("Notice deleted");
+      fetchNoticesAgain(); // refresh the list
+    } catch (error) {
+      toast.error("Failed to delete");
+    }
+  };
 
   const filteredNotices = notices.filter(
     (notice) =>
       notice.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       notice.content.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  useEffect(() => {
+    fetchNotices();
+  }, []);
 
   return (
     <div className="p-6">
@@ -69,9 +90,18 @@ export default function NoticesPage() {
           <AddEditNotice
             onClose={() => setShowAddModal(false)}
             getAllNotices={fetchNotices}
-            showToastMessage={(msg) => toast.success(msg)}
+            showToastMessage={(msg: any) => toast.success(msg)}
           />
         </div>
+      )}
+
+      {editModalOpen && (
+        <AddEditNotice
+          onClose={() => setEditModalOpen(false)} // Close modal
+          getAllNotices={onUpdate} // Refresh notices after update
+          noticeData={selectedNotice} // Selected notice data for editing
+          type="edit" // Specify the type as "edit"
+        />
       )}
 
       {/* Search and Filter */}
@@ -119,61 +149,61 @@ export default function NoticesPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredNotices.map((notice) => (
-                <motion.tr
-                  key={notice.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      {notice.important && (
-                        <AlertCircle className="h-4 w-4 text-red-500 mr-2" />
-                      )}
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {notice.title}
-                        </div>
-                        <div className="text-sm text-gray-500 truncate max-w-md">
-                          {notice.content}
-                        </div>
-                      </div>
-                    </div>
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                  Loading notices...
+                </td>
+              </tr>
+            ) : error ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-4 text-center text-red-500">
+                  {error}
+                </td>
+              </tr>
+            ) : filteredNotices.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                  No notices found.
+                </td>
+              </tr>
+            ) : (
+              filteredNotices.map((notice) => (
+                <tr key={notice.id}>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {notice.title}
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                      {notice.category}
-                    </span>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {notice.category}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    {new Date(notice.date).toLocaleDateString()}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {notice.createdAt?.toDate
+                      ? new Date(notice.createdAt.toDate()).toLocaleDateString()
+                      : "—"}
                   </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        notice.important
-                          ? "bg-red-100 text-red-800"
-                          : "bg-green-100 text-green-800"
-                      }`}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {notice.isImportant ? (
+                      <span className="text-red-600 font-medium flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" /> Important
+                      </span>
+                    ) : (
+                      <span className="text-gray-600">Normal</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap space-x-2">
+                    <button
+                      className="text-blue-600 hover:underline"
+                      onClick={() => handleEdit(notice)} // pass the current row's notice
                     >
-                      {notice.important ? "Important" : "Regular"}
-                    </span>
+                      <Pencil className="inline w-4 h-4" />
+                    </button>
+                    <button className="text-red-600 hover:underline">
+                      <Trash2 className="inline w-4 h-4" />
+                    </button>
                   </td>
-                  <td className="px-6 py-4 text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button className="text-indigo-600 hover:text-indigo-900">
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      <button className="text-red-600 hover:text-red-900">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
+                </tr>
+              ))
+            )}
           </table>
         </div>
       </div>

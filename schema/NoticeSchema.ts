@@ -31,6 +31,7 @@ export async function NoticeSchema({
     isImportant,
     noticeLink,
     createdBy,
+    
     createdAt: serverTimestamp(),
   });
 
