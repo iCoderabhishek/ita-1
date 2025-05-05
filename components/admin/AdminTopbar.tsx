@@ -50,12 +50,13 @@ export default function AdminTopbar({
           : "sm:pl-20 md:pl-20 lg:pl-20"
       }`}
     >
-      <div className="flex items-center">
+      <div className="flex items-center justify-evenly gap-5">
         {/* Mobile Menu Button */}
 
         {/* Page Title - Only shown on larger screens */}
-        <h1 className="text-lg font-semibold text-gray-800 hidden sm:block">
-          Dashboard
+        <h1 className=" text-lg font-semibold text-gray-800 hidden sm:block"></h1>
+        <h1 className="text-lg font-semibold text-gray-800 hover:text-primary hidden sm:block">
+          <a href="/">Go to Home </a>
         </h1>
       </div>
 

@@ -169,7 +169,7 @@ export default function About() {
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
               <div className="w-40 h-40 relative rounded-full overflow-hidden shrink-0 border-4 border-primary/20">
                 <Image
-                  src="/principle-old.png"
+                  src="/principle-old.jpg"
                   alt="Principal"
                   fill
                   style={{ objectFit: "cover" }}
@@ -201,7 +201,7 @@ export default function About() {
                   and technology."
                 </blockquote>
                 <div className="font-semibold text-gray-900">
-                  Mr. Dipankar Das
+                  Mr. Anjan Kumar Acharya
                   <p className="font-normal text-gray-600 text-sm">
                     Principal, Itahar Government Polytechnic
                   </p>

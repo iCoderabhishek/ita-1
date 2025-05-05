@@ -1,12 +1,12 @@
 import { motion } from "framer-motion";
 
 const principalThoughts = {
-  name: "Mr. Dipankar Das",
+  name: "Mr. Anjan Kumar Acharya",
   message: `At our institution, we don't just educate minds—we inspire them. 
   Every brick here holds a dream, and every classroom sparks a vision. 
   We believe in nurturing not only knowledge but also integrity, compassion, and innovation. 
   Our students are the architects of a better tomorrow, and I take pride in being a small part of that journey.`,
-  imageUrl: "/principle-old.png",
+  imageUrl: "/principle-old.jpg",
 };
 
 export default function PrincipalSection() {

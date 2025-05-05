@@ -19,13 +19,13 @@ export default function ClientLayoutWrapper({
 
   return (
     <>
-      <Header />
+      {/* <Header />
       {children}
-      <Footer />
+      <Footer /> */}
 
-      {/* {!isAdmin && <Header />}
+      {!isAdmin && <Header />}
       {children}
-      {!isAdmin && <Footer />} */}
+      {!isAdmin && <Footer />}
     </>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Search, Pencil, Trash2, AlertCircle } from "lucide-react";
 import { redirect } from "next/navigation";
@@ -17,11 +17,11 @@ export default function NoticesPage() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedNotice, setSelectedNotice] = useState(null);
 
-  const [onUpdate, setOnUpdate] = useState();
   const fetchNotices = async () => {
     try {
       setLoading(true);
       const res = await fetch("/api/notices", { cache: "no-store" });
+
       const data = await res.json();
 
       if (!res.ok) {
@@ -41,15 +41,20 @@ export default function NoticesPage() {
     setSelectedNotice(notice);
     setEditModalOpen(true);
   };
-  const fetchNoticesAgain = () => {};
+  const fetchNoticesAgain = useCallback(fetchNotices, []);
 
   const handleDelete = async (id: string) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this notice?"
+    );
+    if (!confirmDelete) return;
+
     try {
-      await axiosInstance.delete(`/api/notices/${id}`); // adjust your route
-      toast.success("Notice deleted");
-      fetchNoticesAgain(); // refresh the list
+      await axiosInstance.delete(`/notices/${id}`);
+      toast.success("Notice deleted successfully");
+      fetchNoticesAgain(); // Refresh the list
     } catch (error) {
-      toast.error("Failed to delete");
+      toast.error("Failed to delete notice");
     }
   };
 
@@ -98,7 +103,7 @@ export default function NoticesPage() {
       {editModalOpen && (
         <AddEditNotice
           onClose={() => setEditModalOpen(false)} // Close modal
-          getAllNotices={onUpdate} // Refresh notices after update
+          getAllNotices={fetchNoticesAgain} // Refresh notices after update
           noticeData={selectedNotice} // Selected notice data for editing
           type="edit" // Specify the type as "edit"
         />
@@ -149,61 +154,80 @@ export default function NoticesPage() {
                 </th>
               </tr>
             </thead>
-            {loading ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                  Loading notices...
-                </td>
-              </tr>
-            ) : error ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-4 text-center text-red-500">
-                  {error}
-                </td>
-              </tr>
-            ) : filteredNotices.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                  No notices found.
-                </td>
-              </tr>
-            ) : (
-              filteredNotices.map((notice) => (
-                <tr key={notice.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {notice.title}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {notice.category}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {notice.createdAt?.toDate
-                      ? new Date(notice.createdAt.toDate()).toLocaleDateString()
-                      : "—"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {notice.isImportant ? (
-                      <span className="text-red-600 font-medium flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" /> Important
-                      </span>
-                    ) : (
-                      <span className="text-gray-600">Normal</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap space-x-2">
-                    <button
-                      className="text-blue-600 hover:underline"
-                      onClick={() => handleEdit(notice)} // pass the current row's notice
-                    >
-                      <Pencil className="inline w-4 h-4" />
-                    </button>
-                    <button className="text-red-600 hover:underline">
-                      <Trash2 className="inline w-4 h-4" />
-                    </button>
+
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-6 py-4 text-center text-gray-500"
+                  >
+                    Loading notices...
                   </td>
                 </tr>
-              ))
-            )}
+              ) : error ? (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-6 py-4 text-center text-red-500"
+                  >
+                    {error}
+                  </td>
+                </tr>
+              ) : filteredNotices.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-6 py-4 text-center text-gray-500"
+                  >
+                    No notices found.
+                  </td>
+                </tr>
+              ) : (
+                filteredNotices.map((notice) => (
+                  <tr key={notice.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {notice.title}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {notice.category}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      {notice.date
+                        ? new Date(notice.date).toLocaleDateString("en-GB")
+                        : notice.createdAt?.seconds
+                        ? new Date(
+                            notice.createdAt.seconds * 1000
+                          ).toLocaleDateString("en-GB")
+                        : "N/A"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {notice.isImportant ? (
+                        <span className="text-red-600 font-medium flex items-center gap-1">
+                          <AlertCircle className="w-4 h-4" /> Important
+                        </span>
+                      ) : (
+                        <span className="text-gray-600">Normal</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap space-x-2">
+                      <button
+                        className="text-blue-600 hover:underline"
+                        onClick={() => handleEdit(notice)}
+                      >
+                        <Pencil className="inline w-4 h-4" />
+                      </button>
+                      <button
+                        className="text-red-600 hover:underline"
+                        onClick={() => handleDelete(notice.id)}
+                      >
+                        <Trash2 className="inline w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
           </table>
         </div>
       </div>
