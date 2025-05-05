@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Search, Pencil, Trash2, Tag, Users } from "lucide-react";
 import Image from "next/image";
@@ -8,38 +8,36 @@ import { redirect } from "next/navigation";
 import EditProject from "@/components/projects/EditProject";
 import { toast } from "sonner";
 
-// Dummy projects data
-const projects = [
-  {
-    id: 1,
-    title: "Smart Energy Monitoring System",
-    description:
-      "A system that monitors electricity consumption in real-time and provides insights on energy usage patterns.",
-    department: "Electrical Engineering",
-    team: ["Amit Kumar", "Priya Singh", "Rajesh Sharma"],
-    image: "https://images.pexels.com/photos/3970330/pexels-photo-3970330.jpeg",
-    tags: ["IoT", "Energy", "Monitoring"],
-    year: "2024",
-  },
-  {
-    id: 2,
-    title: "Automated Attendance System",
-    description:
-      "A facial recognition-based attendance system that automatically records student attendance.",
-    department: "Computer Science & Technology",
-    team: ["Sneha Patel", "Vikram Joshi"],
-    image: "https://images.pexels.com/photos/5952738/pexels-photo-5952738.jpeg",
-    tags: ["AI", "Computer Vision"],
-    year: "2024",
-  },
-  // Add more projects...
-];
-
-const fetchAllProjects = () => {};
+type Project = {
+  id: number;
+  title: string;
+  description: string;
+  department: string;
+  teamMembers: string[];
+  image: string;
+  category: string[];
+  createdAt: any;
+  link: string[];
+};
 
 export default function ProjectsPage() {
+  const [projects, setProjects] = useState<Project[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+
+  const fetchAllProjects = async () => {
+    try {
+      const res = await fetch("/api/projects"); // adjust to your actual endpoint
+      const data = await res.json();
+      setProjects(data.projects || []);
+    } catch (error) {
+      toast.error("Failed to load projects");
+    }
+  };
+
+  useEffect(() => {
+    fetchAllProjects();
+  }, []);
 
   const filteredProjects = projects.filter(
     (project) =>
@@ -47,6 +45,8 @@ export default function ProjectsPage() {
       project.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleEdit = () => {};
+  const handleDelete = () => {};
   return (
     <div className="p-6">
       {/* Header */}
@@ -113,15 +113,15 @@ export default function ProjectsPage() {
             className="bg-white rounded-lg shadow-md overflow-hidden"
           >
             <div className="relative h-48">
-              <Image
+              <img
                 src={project.image}
                 alt={project.title}
-                fill
+                // fill
                 style={{ objectFit: "cover" }}
               />
               <div className="absolute top-2 right-2 flex space-x-1">
                 <button
-                  onClick={() => redirect("/admin/edit-project")}
+                  onClick={() => handleEdit()}
                   className="p-1.5 bg-white rounded-lg shadow-sm hover:bg-gray-50"
                 >
                   <Pencil className="h-4 w-4 text-gray-600" />
@@ -142,7 +142,7 @@ export default function ProjectsPage() {
               <div className="flex items-center mb-3">
                 <Tag className="h-4 w-4 text-primary mr-2" />
                 <div className="flex flex-wrap gap-1">
-                  {project.tags.map((tag, index) => (
+                  {project.category.map((tag, index) => (
                     <span
                       key={index}
                       className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs"
@@ -158,7 +158,7 @@ export default function ProjectsPage() {
                 <span className="text-sm text-gray-600">Team Members:</span>
               </div>
               <div className="pl-6 space-y-1">
-                {project.team.map((member, index) => (
+                {project.teamMembers.map((member, index) => (
                   <div key={index} className="text-sm text-gray-600">
                     {member}
                   </div>
@@ -167,11 +167,18 @@ export default function ProjectsPage() {
 
               <div className="mt-4 pt-4 border-t flex justify-between items-center">
                 <span className="text-sm text-gray-600">
-                  {project.department}
+                  Project by {project.department} dept.
                 </span>
                 <span className="text-sm font-medium text-primary">
-                  {project.year}
+                  {new Date(
+                    project.createdAt.seconds * 1000
+                  ).toLocaleDateString("en-GB")}
                 </span>
+              </div>
+              <div className="pl-6 space-y-1">
+                <div className="text-sm text-gray-600">
+                  Live link: {project.link}
+                </div>
               </div>
             </div>
           </motion.div>

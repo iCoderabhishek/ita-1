@@ -1,81 +1,59 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import {
-  Plus,
-  Search,
-  Pencil,
-  Trash2,
-  BookOpen,
-  Users,
-  Clock,
-} from "lucide-react";
+import { Plus, Search, Pencil, Trash2, BookOpen, Users } from "lucide-react";
 import EditCourses from "@/components/courses/EditCourses";
 import { toast } from "sonner";
-
-// Dummy courses data
-const courses = [
-  {
-    id: 1,
-    name: "Computer Science & Technology",
-    code: "CST",
-    duration: "3 Years",
-    seats: 60,
-    coordinator: "Dr. John Doe",
-    description:
-      "Diploma program covering computer programming, software development, and IT infrastructure.",
-    subjects: [
-      "Programming Fundamentals",
-      "Database Management",
-      "Web Development",
-      "Computer Networks",
-    ],
-  },
-  {
-    id: 2,
-    name: "Electrical Engineering",
-    code: "EE",
-    duration: "3 Years",
-    seats: 60,
-    coordinator: "Dr. Jane Smith",
-    description:
-      "Comprehensive program in electrical systems, power generation, and control systems.",
-    subjects: [
-      "Circuit Theory",
-      "Power Systems",
-      "Electrical Machines",
-      "Control Systems",
-    ],
-  },
-  {
-    id: 3,
-    name: "Electronics and Telecommunication Engineering",
-    code: "ETCE",
-    duration: "3 Years",
-    seats: 60,
-    coordinator: "Dr. Robert Johnson",
-    description:
-      "Program focusing on electronic circuits, communication systems, and signal processing.",
-    subjects: [
-      "Electronic Devices",
-      "Communication Systems",
-      "Digital Electronics",
-      "Microprocessors",
-    ],
-  },
-];
-
-const fetchAllCourses = () => {};
+import EditCourse from "@/components/courses/EditCourses";
 
 export default function CoursesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState<any>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  const fetchAllCourses = async () => {
+    try {
+      const res = await fetch("/api/courses");
+      const data = await res.json();
+      console.log(data);
+      setCourses(data.courses); // ← updated
+    } catch (error) {
+      toast.error("Failed to fetch courses");
+    }
+  };
+
+  useEffect(() => {
+    fetchAllCourses();
+  }, []);
+
+  const fetchCourses = async () => {
+    try {
+      const res = await fetch("/api/courses");
+      const data = await res.json();
+      console.log(data);
+      setCourses(data.courses); // ← updated
+    } catch (error) {
+      toast.error("Failed to fetch courses");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await fetch(`/api/courses/${id}`, { method: "DELETE" });
+      toast.success("Course deleted");
+      fetchAllCourses();
+    } catch (error) {
+      toast.error("Failed to delete course");
+    }
+  };
 
   const filteredCourses = courses.filter(
     (course) =>
-      course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.code.toLowerCase().includes(searchTerm.toLowerCase())
+      course.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      course.department?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -110,6 +88,18 @@ export default function CoursesPage() {
         </div>
       )}
 
+      {showEditModal && selectedCourse && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex justify-center items-center p-4">
+          <EditCourse
+            onClose={() => setShowEditModal(false)}
+            showToastMessage={(msg) => toast(msg)} // if you're using react-hot-toast or similar
+            getAllCourses={fetchCourses} // refresh course list after edit
+            CourseData={selectedCourse}
+            type="edit"
+          />
+        </div>
+      )}
+
       {/* Search */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">
         <div className="relative">
@@ -140,18 +130,27 @@ export default function CoursesPage() {
                 </div>
                 <div>
                   <h3 className="font-bold text-lg text-gray-800">
-                    {course.name}
+                    {course.title}
                   </h3>
                   <span className="text-sm text-gray-500">
-                    Code: {course.code}
+                    Department: {course.department}
                   </span>
                 </div>
               </div>
               <div className="flex space-x-2">
-                <button className="p-1.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                <button
+                  className="p-1.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  onClick={() => {
+                    setSelectedCourse(course);
+                    setShowEditModal(true);
+                  }}
+                >
                   <Pencil className="h-4 w-4 text-gray-600" />
                 </button>
-                <button className="p-1.5 bg-red-100 rounded-lg hover:bg-red-200 transition-colors">
+                <button
+                  className="p-1.5 bg-red-100 rounded-lg hover:bg-red-200 transition-colors"
+                  onClick={() => handleDelete(course.id)}
+                >
                   <Trash2 className="h-4 w-4 text-red-600" />
                 </button>
               </div>
@@ -161,37 +160,33 @@ export default function CoursesPage() {
 
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="flex items-center space-x-2">
-                <Clock className="h-4 w-4 text-primary" />
-                <span className="text-sm text-gray-600">{course.duration}</span>
-              </div>
-              <div className="flex items-center space-x-2">
                 <Users className="h-4 w-4 text-primary" />
                 <span className="text-sm text-gray-600">
-                  {course.seats} seats
+                  {course.totalIntake} seats
                 </span>
               </div>
             </div>
 
-            <div className="mb-4">
-              <h4 className="font-medium text-gray-800 mb-2">
-                Course Coordinator
+            <div className="mb-2">
+              <h4 className="font-medium text-gray-800 mb-1">
+                Course Coordinator(s)
               </h4>
-              <p className="text-sm text-gray-600">{course.coordinator}</p>
+              <ul className="text-sm text-gray-600 list-disc list-inside">
+                {course.coordinator?.map((c: string, i: number) => (
+                  <li key={i}>{c}</li>
+                ))}
+              </ul>
             </div>
 
-            <div>
-              <h4 className="font-medium text-gray-800 mb-2">Core Subjects</h4>
-              <div className="flex flex-wrap gap-2">
-                {course.subjects.map((subject, index) => (
-                  <span
-                    key={index}
-                    className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full"
-                  >
-                    {subject}
-                  </span>
-                ))}
-              </div>
-            </div>
+            {course.link && (
+              <a
+                href={course.link}
+                className="text-sm text-blue-600 hover:underline mt-2 inline-block"
+                target="_blank"
+              >
+                Visit Course Page
+              </a>
+            )}
           </motion.div>
         ))}
       </div>

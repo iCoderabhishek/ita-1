@@ -1,14 +1,51 @@
-// app/api/contact-messages/route.ts
+// app/api/courses/route.ts
+import { db } from "@/firebase";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  serverTimestamp,
+} from "firebase/firestore";
+import { NextRequest, NextResponse } from "next/server";
 
-// Add at least one import...
-import { NextResponse } from 'next/server';
+export const dynamic = "force-dynamic";
 
-export async function POST(request: Request) {
-  // Your API route logic here
-  const data = await request.json();
-  console.log('Received data:', data);
-  return NextResponse.json({ message: 'Contact message received!' });
+// [GET] Fetch all courses
+export async function GET() {
+  try {
+    const snapshot = await getDocs(collection(db, "courses"));
+    const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    return NextResponse.json({ courses: data });
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to fetch courses" }, { status: 500 });
+  }
 }
 
-// ...or an export if you don't need any imports yet
-// export {};
+// [POST] Create a new course
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { title, department, totalIntake, description, coordinator, link } = body;
+
+    // Only check the required fields
+if ([title, department, description, coordinator].some(f => !f) || totalIntake === undefined) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    
+    const docRef = await addDoc(collection(db, "courses"), {
+      title,
+      department,
+      totalIntake,
+      description,
+      coordinator,
+      link: link || "",
+      createdAt: serverTimestamp(),
+    });
+    console.log("Incoming body:", body);
+
+    return NextResponse.json({ message: "Course created", id: docRef.id });
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to create course" }, { status: 500 });
+  }
+}

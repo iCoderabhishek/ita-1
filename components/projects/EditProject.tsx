@@ -28,7 +28,7 @@ export default function EditProject({
     "Software",
     "Web",
   ]);
-  const [selectedCategory, setSelectedCategory] = useState(
+  const [selectedCategories, setSelectedCategories] = useState(
     ProjectData?.category || []
   );
   const [newCategory, setNewCategory] = useState("");
@@ -37,7 +37,9 @@ export default function EditProject({
   const [date, setDate] = useState("");
   const [department, setDepartment] = useState("");
   const [newMember, setNewMember] = useState("");
-  const [teamMembers, setTeamMembers] = useState<string[]>([]);
+  const [teamMembers, setTeamMembers] = useState<string[]>(
+    ProjectData?.teamMembers || []
+  );
 
   useEffect(() => {
     setDate(ProjectData?.date || new Date().toISOString().slice(0, 10));
@@ -58,27 +60,48 @@ export default function EditProject({
       title,
       date,
       important,
-      category: selectedCategory,
+      category: setSelectedCategories,
       content,
       link,
+      department,
+      teamMembers,
     };
 
-    console.log(`${type === "edit" ? "Editing" : "Adding"} Project:`, data);
+    try {
+      const res = await fetch(
+        type === "edit"
+          ? `/api/projects/${ProjectData.id}` // PUT for existing project
+          : "/api/projects", // POST for new project
+        {
+          method: type === "edit" ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        }
+      );
 
-    // Placeholder logic
-    if (type === "edit") {
-      showToastMessage?.("Project updated successfully!");
-    } else {
-      showToastMessage?.("Project added successfully!");
+      if (!res.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const result = await res.json();
+
+      showToastMessage?.(
+        type === "edit"
+          ? "Project updated successfully!"
+          : "Project added successfully!"
+      );
+
+      getAllProjects?.();
+      onClose();
+    } catch (error) {
+      console.error(error);
+      showToastMessage?.("Something went wrong. Please try again.");
     }
-
-    getAllProjects?.();
-    onClose();
   };
 
   const handleAddCategory = () => {
-    if (newCategory && !categories.includes(newCategory)) {
-      setCategories((prev) => [...prev, newCategory]);
+    if (newCategory.trim() && !categories.includes(newCategory.trim())) {
+      setCategories((prev) => [...prev, newCategory.trim()]);
       setNewCategory("");
     }
   };
@@ -90,8 +113,8 @@ export default function EditProject({
     }
   };
 
-  const toggleCategory = (cat: any) => {
-    setSelectedCategory((prev: any) =>
+  const toggleCategory = (cat: string) => {
+    setSelectedCategories((prev: string[]) =>
       prev.includes(cat) ? prev.filter((c: any) => c !== cat) : [...prev, cat]
     );
   };
@@ -122,11 +145,6 @@ export default function EditProject({
         />
       </div>
 
-      {/* <div className="flex items-center justify-between">
-        <label className="text-gray-700 font-medium">Mark as Important</label>
-        <Switch checked={important} onCheckedChange={setImportant} />
-      </div> */}
-
       {/* Department */}
       <div>
         <label className="block mb-1 text-sm font-medium text-gray-700">
@@ -155,7 +173,7 @@ export default function EditProject({
               key={cat}
               onClick={() => toggleCategory(cat)}
               className={`px-3 py-1 rounded-full border text-sm transition ${
-                selectedCategory.includes(cat)
+                selectedCategories.includes(cat)
                   ? "bg-blue-600 text-white border-blue-600"
                   : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
               }`}

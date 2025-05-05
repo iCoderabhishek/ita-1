@@ -35,9 +35,12 @@ export default function EditCourse({
   const [content, setContent] = useState(CourseData?.content || "");
   const [link, setLink] = useState(CourseData?.link || "");
   const [date, setDate] = useState("");
-  const [department, setDepartment] = useState("");
+  const [department, setDepartment] = useState(CourseData?.department || "");
   const [newMember, setNewMember] = useState("");
-  const [teamMembers, setTeamMembers] = useState<string[]>([]);
+  const [intake, setIntake] = useState(CourseData?.intake || "");
+  const [teamMembers, setTeamMembers] = useState<string[]>(
+    CourseData?.teamMembers || []
+  );
 
   useEffect(() => {
     setDate(CourseData?.date || new Date().toISOString().slice(0, 10));
@@ -54,26 +57,54 @@ export default function EditCourse({
   }, []);
 
   const handleSubmit = async () => {
+    const finalTeamMembers = newMember.trim()
+      ? [...teamMembers, newMember.trim()]
+      : teamMembers;
+
     const data = {
       title,
-      date,
-      important,
-      category: selectedCategory,
-      content,
+      department,
+      totalIntake: intake,
+      description: content,
+      coordinator: finalTeamMembers,
       link,
     };
 
-    console.log(`${type === "edit" ? "Editing" : "Adding"} Course:`, data);
+    try {
+      const endpoint =
+        type === "edit" && CourseData?.id
+          ? `/api/courses/${CourseData.id}`
+          : "/api/courses";
 
-    // Placeholder logic
-    if (type === "edit") {
-      showToastMessage?.("Course updated successfully!");
-    } else {
-      showToastMessage?.("Course added successfully!");
+      const method = type === "edit" ? "PUT" : "POST";
+
+      const res = await fetch(endpoint, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        showToastMessage?.(
+          result.error || "Error occurred while saving the course."
+        );
+        return;
+      }
+
+      showToastMessage?.(
+        type === "edit"
+          ? "Course updated successfully!"
+          : "Course added successfully!"
+      );
+      getAllCourses?.();
+      onClose();
+    } catch (error) {
+      showToastMessage?.("Error occurred while saving the course.");
     }
-
-    getAllCourses?.();
-    onClose();
   };
 
   const handleAddCategory = () => {
@@ -94,6 +125,21 @@ export default function EditCourse({
     setSelectedCategory((prev: any) =>
       prev.includes(cat) ? prev.filter((c: any) => c !== cat) : [...prev, cat]
     );
+  };
+
+  const handleDelete = async () => {
+    if (CourseData?.id) {
+      try {
+        await fetch(`/api/courses/${CourseData.id}`, {
+          method: "DELETE",
+        });
+        showToastMessage?.("Course deleted successfully!");
+        getAllCourses?.();
+        onClose();
+      } catch (error) {
+        showToastMessage?.("Error occurred while deleting the course.");
+      }
+    }
   };
 
   return (
@@ -148,13 +194,13 @@ export default function EditCourse({
       <div className="flex flex-col sm:flex-row gap-2">
         <input
           type="number"
-          value={newMember}
-          onChange={(e) => setNewMember(e.target.value)}
+          value={intake}
+          onChange={(e) => setIntake(e.target.value)}
           placeholder="No. of seats to intake"
           className="flex-1 p-2 border border-gray-300 rounded-lg"
+          required
         />
       </div>
-
       {/* Course Description */}
       <div>
         <label className="block mb-1 text-sm font-medium text-gray-700">
