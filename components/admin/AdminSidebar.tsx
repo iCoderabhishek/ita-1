@@ -16,6 +16,7 @@ import {
   GraduationCap,
   Library,
   UserCog,
+  School,
 } from "lucide-react";
 
 const menuItems = [
@@ -43,6 +44,11 @@ const menuItems = [
     name: "Faculty",
     icon: <UserCog />,
     href: "/admin/faculty",
+  },
+  {
+    name: "Departments",
+    icon: <School />,
+    href: "/admin/departments",
   },
   {
     name: "Study Materials",

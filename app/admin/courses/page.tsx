@@ -13,6 +13,8 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<any[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const fetchAllCourses = async () => {
     try {
@@ -21,7 +23,9 @@ export default function CoursesPage() {
       console.log(data);
       setCourses(data.courses); // ← updated
     } catch (error) {
-      toast.error("Failed to fetch courses");
+      setError("Failed to load projects");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -42,6 +46,10 @@ export default function CoursesPage() {
 
   const handleDelete = async (id: string) => {
     try {
+      const confirmDelete = window.confirm(
+        "Are you sure you want to delete this course?"
+      );
+      if (!confirmDelete) return;
       await fetch(`/api/courses/${id}`, { method: "DELETE" });
       toast.success("Course deleted");
       fetchAllCourses();
@@ -116,79 +124,93 @@ export default function CoursesPage() {
 
       {/* Courses Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {filteredCourses.map((course) => (
-          <motion.div
-            key={course.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-lg shadow-md p-6"
-          >
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-start space-x-3">
-                <div className="bg-primary/10 p-2 rounded-lg">
-                  <BookOpen className="h-6 w-6 text-primary" />
+        {loading ? (
+          <div className="col-span-full text-center text-gray-500 py-10">
+            Loading courses...
+          </div>
+        ) : error ? (
+          <div className="col-span-full text-center text-red-500 py-10">
+            {error}
+          </div>
+        ) : filteredCourses.length === 0 ? (
+          <div className="col-span-full text-center text-gray-500 py-10">
+            No courses found.
+          </div>
+        ) : (
+          filteredCourses.map((course) => (
+            <motion.div
+              key={course.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-lg shadow-md p-6"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-start space-x-3">
+                  <div className="bg-primary/10 p-2 rounded-lg">
+                    <BookOpen className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg text-gray-800">
+                      {course.title}
+                    </h3>
+                    <span className="text-sm text-gray-500">
+                      Department: {course.department}
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-lg text-gray-800">
-                    {course.title}
-                  </h3>
-                  <span className="text-sm text-gray-500">
-                    Department: {course.department}
+                <div className="flex space-x-2">
+                  <button
+                    className="p-1.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    onClick={() => {
+                      setSelectedCourse(course);
+                      setShowEditModal(true);
+                    }}
+                  >
+                    <Pencil className="h-4 w-4 text-gray-600" />
+                  </button>
+                  <button
+                    className="p-1.5 bg-red-100 rounded-lg hover:bg-red-200 transition-colors"
+                    onClick={() => handleDelete(course.id)}
+                  >
+                    <Trash2 className="h-4 w-4 text-red-600" />
+                  </button>
+                </div>
+              </div>
+
+              <p className="text-gray-600 mb-4">{course.description}</p>
+
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="flex items-center space-x-2">
+                  <Users className="h-4 w-4 text-primary" />
+                  <span className="text-sm text-gray-600">
+                    {course.totalIntake} seats
                   </span>
                 </div>
               </div>
-              <div className="flex space-x-2">
-                <button
-                  className="p-1.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                  onClick={() => {
-                    setSelectedCourse(course);
-                    setShowEditModal(true);
-                  }}
-                >
-                  <Pencil className="h-4 w-4 text-gray-600" />
-                </button>
-                <button
-                  className="p-1.5 bg-red-100 rounded-lg hover:bg-red-200 transition-colors"
-                  onClick={() => handleDelete(course.id)}
-                >
-                  <Trash2 className="h-4 w-4 text-red-600" />
-                </button>
+
+              <div className="mb-2">
+                <h4 className="font-medium text-gray-800 mb-1">
+                  Course Coordinator(s)
+                </h4>
+                <ul className="text-sm text-gray-600 list-disc list-inside">
+                  {course.coordinator?.map((c: string, i: number) => (
+                    <li key={i}>{c}</li>
+                  ))}
+                </ul>
               </div>
-            </div>
 
-            <p className="text-gray-600 mb-4">{course.description}</p>
-
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="flex items-center space-x-2">
-                <Users className="h-4 w-4 text-primary" />
-                <span className="text-sm text-gray-600">
-                  {course.totalIntake} seats
-                </span>
-              </div>
-            </div>
-
-            <div className="mb-2">
-              <h4 className="font-medium text-gray-800 mb-1">
-                Course Coordinator(s)
-              </h4>
-              <ul className="text-sm text-gray-600 list-disc list-inside">
-                {course.coordinator?.map((c: string, i: number) => (
-                  <li key={i}>{c}</li>
-                ))}
-              </ul>
-            </div>
-
-            {course.link && (
-              <a
-                href={course.link}
-                className="text-sm text-blue-600 hover:underline mt-2 inline-block"
-                target="_blank"
-              >
-                Visit Course Page
-              </a>
-            )}
-          </motion.div>
-        ))}
+              {course.link && (
+                <a
+                  href={course.link}
+                  className="text-sm text-blue-600 hover:underline mt-2 inline-block"
+                  target="_blank"
+                >
+                  Visit Course Page
+                </a>
+              )}
+            </motion.div>
+          ))
+        )}
       </div>
     </div>
   );

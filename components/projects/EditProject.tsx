@@ -10,6 +10,7 @@ interface EditProjectProps {
   getAllProjects?: () => void;
   ProjectData?: any;
   type?: "add" | "edit";
+  onSave?: (updatedProject: any) => void; // <- Add this
 }
 
 export default function EditProject({
@@ -18,6 +19,7 @@ export default function EditProject({
   getAllProjects,
   ProjectData,
   type = "add",
+  onSave, // ✅ Add this line
 }: EditProjectProps) {
   const [title, setTitle] = useState(ProjectData?.title || "");
   const [important, setImportant] = useState(ProjectData?.important || false);
@@ -55,12 +57,25 @@ export default function EditProject({
     return () => document.removeEventListener("keydown", handleEsc);
   }, []);
 
+  useEffect(() => {
+    if (type === "edit" && ProjectData) {
+      setTitle(ProjectData.title || "");
+      setImportant(ProjectData.important || false);
+      setSelectedCategories(ProjectData.category || []);
+      setContent(ProjectData.content || "");
+      setLink(ProjectData.link || "");
+      setDate(ProjectData.date || new Date().toISOString().slice(0, 10));
+      setDepartment(ProjectData.department || "");
+      setTeamMembers(ProjectData.teamMembers || []);
+    }
+  }, [ProjectData, type]);
+
   const handleSubmit = async () => {
     const data = {
       title,
       date,
       important,
-      category: setSelectedCategories,
+      category: selectedCategories,
       content,
       link,
       department,
@@ -91,7 +106,14 @@ export default function EditProject({
           : "Project added successfully!"
       );
 
-      getAllProjects?.();
+      // if parent passed onSave (edit mode), update local state
+      if (type === "edit" && onSave) {
+        onSave(result);
+      } else {
+        // if new project or using fetch, refresh project list
+        getAllProjects?.();
+      }
+
       onClose();
     } catch (error) {
       console.error(error);

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Switch } from "../ui/switch";
 import { X } from "lucide-react";
 
 interface EditFacultyProps {
@@ -19,81 +18,65 @@ export default function EditFaculty({
   FacultyData,
   type = "add",
 }: EditFacultyProps) {
-  const [title, setTitle] = useState(FacultyData?.title || "");
-  const [important, setImportant] = useState(FacultyData?.important || false);
-  const [categories, setCategories] = useState([
-    "AI",
-    "Energy",
-    "IoT",
-    "Software",
-    "Web",
-  ]);
-  const [selectedCategory, setSelectedCategory] = useState(
-    FacultyData?.category || []
+  const [name, setName] = useState(FacultyData?.name || "");
+  const [department, setDepartment] = useState(FacultyData?.department || "");
+  const [designation, setDesignation] = useState(
+    FacultyData?.designation || ""
   );
-  const [newCategory, setNewCategory] = useState("");
-  const [content, setContent] = useState(FacultyData?.content || "");
-  const [link, setLink] = useState(FacultyData?.link || "");
-  const [date, setDate] = useState("");
-  const [department, setDepartment] = useState("");
-  const [newMember, setNewMember] = useState("");
-  const [teamMembers, setTeamMembers] = useState<string[]>([]);
+  const [qualification, setQualification] = useState(
+    FacultyData?.qualification || ""
+  );
+  const [specialization, setSpecialization] = useState(
+    FacultyData?.specializations?.[0] || ""
+  );
+  const [email, setEmail] = useState(FacultyData?.email || "");
+  const [phone, setPhone] = useState(FacultyData?.phone || "");
+  const [image, setImage] = useState(FacultyData?.image || "");
 
   useEffect(() => {
-    setDate(FacultyData?.date || new Date().toISOString().slice(0, 10));
-  }, [FacultyData]);
-
-  useEffect(() => {
-    const handleEsc = (e: any) => {
+    const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         onClose();
       }
     };
     document.addEventListener("keydown", handleEsc);
     return () => document.removeEventListener("keydown", handleEsc);
-  }, []);
+  }, [onClose]);
 
   const handleSubmit = async () => {
-    const data = {
-      title,
-      date,
-      important,
-      category: selectedCategory,
-      content,
-      link,
-    };
+    const method = type === "edit" ? "PUT" : "POST";
+    const response = await fetch("/api/faculty", {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: FacultyData?.id, // needed for edit
+        name,
+        department,
+        designation,
+        qualification,
+        specializations: specialization ? [specialization] : [],
+        email,
+        phone,
+        image,
+      }),
+    });
 
-    console.log(`${type === "edit" ? "Editing" : "Adding"} Faculty:`, data);
+    const result = await response.json();
 
-    // Placeholder logic
-    if (type === "edit") {
-      showToastMessage?.("Faculty updated successfully!");
-    } else {
-      showToastMessage?.("Faculty added successfully!");
+    if (!response.ok) {
+      showToastMessage?.(result.error || "Something went wrong.");
+      return;
     }
 
+    showToastMessage?.(
+      type === "edit"
+        ? "Faculty updated successfully!"
+        : "Faculty added successfully!"
+    );
     getAllFaculty?.();
     onClose();
-  };
-
-  const handleAddCategory = () => {
-    if (newCategory && !categories.includes(newCategory)) {
-      setCategories((prev) => [...prev, newCategory]);
-      setNewCategory("");
-    }
-  };
-
-  const handleAddMember = () => {
-    if (newMember.trim()) {
-      setTeamMembers([...teamMembers, newMember.trim()]);
-      setNewMember("");
-    }
-  };
-
-  const toggleCategory = (cat: any) => {
-    setSelectedCategory((prev: any) =>
-      prev.includes(cat) ? prev.filter((c: any) => c !== cat) : [...prev, cat]
-    );
   };
 
   return (
@@ -116,8 +99,8 @@ export default function EditFaculty({
         </label>
         <input
           type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           className="w-full p-3 border border-gray-300 text-xl rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
         />
@@ -128,88 +111,97 @@ export default function EditFaculty({
         <label className="block mb-1 text-sm font-medium text-gray-700">
           Department<span className="text-red-500">*</span>
         </label>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <input
-            type="text"
-            value={newMember}
-            onChange={(e) => setNewMember(e.target.value)}
-            placeholder="eg., Computer Science and Technology"
-            className="flex-1 p-2 border border-gray-300 rounded-lg"
-          />
-        </div>
-      </div>
-
-      {/* intake */}
-
-      <label className="block mb-1 text-sm font-medium text-gray-700">
-        Designation<span className="text-red-500">*</span>
-      </label>
-      <div className="flex flex-col sm:flex-row gap-2">
         <input
           type="text"
-          value={newMember}
-          onChange={(e) => setNewMember(e.target.value)}
+          value={department}
+          onChange={(e) => setDepartment(e.target.value)}
+          placeholder="eg., Computer Science and Technology"
+          className="w-full p-3 border border-gray-300 rounded-lg"
+        />
+      </div>
+
+      {/* Designation */}
+      <div>
+        <label className="block mb-1 text-sm font-medium text-gray-700">
+          Designation<span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          value={designation}
+          onChange={(e) => setDesignation(e.target.value)}
           placeholder="eg., Assistant Professor"
-          className="flex-1 p-2 border border-gray-300 rounded-lg"
+          className="w-full p-3 border border-gray-300 rounded-lg"
         />
       </div>
 
-      {/* faculty qualification */}
-
-      <label className="block mb-1 text-sm font-medium text-gray-700">
-        Qualification<span className="text-red-500">*</span>
-      </label>
-      <div className="flex flex-col sm:flex-row gap-2">
+      {/* Qualification */}
+      <div>
+        <label className="block mb-1 text-sm font-medium text-gray-700">
+          Qualification<span className="text-red-500">*</span>
+        </label>
         <input
           type="text"
-          value={newMember}
-          onChange={(e) => setNewMember(e.target.value)}
+          value={qualification}
+          onChange={(e) => setQualification(e.target.value)}
           placeholder="eg., M.Tech in CSE"
-          className="flex-1 p-2 border border-gray-300 rounded-lg"
+          className="w-full p-3 border border-gray-300 rounded-lg"
         />
       </div>
 
-      {/* faculty Specialization */}
-
-      <label className="block mb-1 text-sm font-medium text-gray-700">
-        Specialization
-      </label>
-      <div className="flex flex-col sm:flex-row gap-2">
+      {/* Specialization */}
+      <div>
+        <label className="block mb-1 text-sm font-medium text-gray-700">
+          Specialization
+        </label>
         <input
           type="text"
-          value={newMember}
-          onChange={(e) => setNewMember(e.target.value)}
-          placeholder="eg., Distributed Sysytems"
-          className="flex-1 p-2 border border-gray-300 rounded-lg"
+          value={specialization}
+          onChange={(e) => setSpecialization(e.target.value)}
+          placeholder="eg., Distributed Systems"
+          className="w-full p-3 border border-gray-300 rounded-lg"
         />
       </div>
 
-      {/* Faculty Description */}
-
-      <label className="block mb-1 text-sm font-medium text-gray-700">
-        Email Address<span className="text-red-500">*</span>
-      </label>
-      <div className="flex flex-col sm:flex-row gap-2">
+      {/* Email */}
+      <div>
+        <label className="block mb-1 text-sm font-medium text-gray-700">
+          Email Address<span className="text-red-500">*</span>
+        </label>
         <input
           type="email"
-          value={newMember}
-          onChange={(e) => setNewMember(e.target.value)}
-          placeholder=""
-          className="flex-1 p-2 border border-gray-300 rounded-lg"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+          className="w-full p-3 border border-gray-300 rounded-lg"
         />
       </div>
 
-      {/* Coordinator */}
-      <label className="block mb-1 text-sm font-medium text-gray-700">
-        Phone Number
-      </label>
-      <div className="flex flex-col sm:flex-row gap-2">
+      {/* Phone */}
+      <div>
+        <label className="block mb-1 text-sm font-medium text-gray-700">
+          Phone Number
+        </label>
         <input
           type="number"
-          value={newMember}
-          onChange={(e) => setNewMember(e.target.value)}
-          placeholder=""
-          className="flex-1 p-2 border border-gray-300 rounded-lg"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="Phone Number"
+          className="w-full p-3 border border-gray-300 rounded-lg"
+        />
+      </div>
+
+      {/* Image Url */}
+      <div>
+        <label className="block mb-1 text-sm font-medium text-gray-700">
+          Enter Public URL of the Faculty Image
+          <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="url"
+          value={image}
+          onChange={(e) => setImage(e.target.value)}
+          placeholder="https://example.com/image.jpg"
+          className="w-full p-3 border border-gray-300 rounded-lg"
         />
       </div>
 

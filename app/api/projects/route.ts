@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       createdAt: serverTimestamp(),
     });
 
-    return NextResponse.json({ message: "Project created", id: docRef.id });
+    return NextResponse.json({ docRef });
   } catch (error) {
     return NextResponse.json({ error: "Failed to create project" }, { status: 500 });
   }

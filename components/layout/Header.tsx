@@ -10,6 +10,7 @@ const navLinks = [
   { name: "About", href: "/about" },
   { name: "Courses", href: "/courses" },
   { name: "Departments", href: "/departments" },
+  { name: "Faculty", href: "/faculty" },
   { name: "Notices", href: "/notices" },
   { name: "E-learning", href: "/e-learning" },
   { name: "Projects", href: "/projects" },

@@ -1,9 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import DepartmentComponent from "@/components/courses/DepartmentComponent";
+import FacultyComponent from "@/components/faculty/FacultyComponent";
 
-export default function DepartmentsPage() {
+export default function FacultyPage() {
   return (
     <main className="min-h-screen pt-16 md:pt-20">
       {/* Banner */}
@@ -14,24 +14,22 @@ export default function DepartmentsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">
-              Our Departments
-            </h1>
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">Our Faculty</h1>
             <p className="text-white/80 max-w-2xl mx-auto">
-              Explore our academic departments offering specialized technical
-              education in various engineering disciplines
+              Meet our experienced and dedicated faculty members who are
+              committed to providing quality education
             </p>
           </motion.div>
         </div>
       </div>
 
-      {/* Department Component */}
+      {/* Faculty Table */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
-        <DepartmentComponent />
+        <FacultyComponent />
       </motion.div>
     </main>
   );

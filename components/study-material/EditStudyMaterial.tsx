@@ -35,6 +35,9 @@ export default function AddEditStudyMaterial({
   const [newCategory, setNewCategory] = useState("");
   const [content, setContent] = useState(StudyMaterialData?.content || "");
   const [link, setLink] = useState(StudyMaterialData?.link || "");
+  const [department, setDepartment] = useState(
+    StudyMaterialData?.department || ""
+  );
   const [date, setDate] = useState("");
 
   useEffect(() => {
@@ -58,6 +61,7 @@ export default function AddEditStudyMaterial({
       important,
       category: selectedCategory,
       content,
+      department,
       link,
     };
 
@@ -177,6 +181,25 @@ export default function AddEditStudyMaterial({
           <option value="4">Semester -4 </option>
           <option value="5">Semester -5 </option>
           <option value="6">Semester -6 </option>
+        </select>
+      </div>
+
+      {/* department */}
+
+      <div>
+        <label className="block mb-1 text-sm font-medium text-gray-700">
+          Department<span className="text-red-500">*</span>
+        </label>
+        <select
+          value={link}
+          onChange={(e) => setLink(e.target.value)}
+          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Select Department</option>
+          <option value="1">Computer Science & Technology</option>
+          <option value="2">Electrical Engineering</option>
+          <option value="3">Electronics and Telecommunication</option>
+          <option value="4">Others</option>
         </select>
       </div>
 
