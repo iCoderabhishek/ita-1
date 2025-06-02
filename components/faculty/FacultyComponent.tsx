@@ -96,6 +96,7 @@ export default function FacultyComponent() {
                           alt={faculty.name}
                           fill
                           style={{ objectFit: "cover" }}
+                          priority
                         />
                       </div>
                     </div>

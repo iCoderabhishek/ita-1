@@ -14,7 +14,7 @@ import { AnimationContainer } from "@/components/ui/animation-container";
 
 export default function CourseDetailsPage() {
   const params = useParams();
-  const courseName = params.course_name as string;
+  const courseName = params.course_name as string | any;
 
   const [courseDetails, setCourseDetails] = useState<Course | any | null>(null);
   const [loading, setLoading] = useState(true);

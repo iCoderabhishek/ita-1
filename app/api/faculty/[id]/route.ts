@@ -3,7 +3,7 @@ import { doc, deleteDoc, updateDoc } from "firebase/firestore";
 import { NextResponse } from "next/server";
 
 // DELETE faculty
-export async function DELETE(_: Request, context: { params: { id: string } }) {
+export async function DELETE(_: Request, context: any) {
   const { id } = context.params;
 
   try {
@@ -18,7 +18,8 @@ export async function DELETE(_: Request, context: { params: { id: string } }) {
 }
 
 // PUT (update faculty)
-export async function PUT(req: Request, context: { params: { id: string } }) {
+// export async function PUT(req: Request, context: { params: { id: string } }) {
+export async function PUT(req: Request, context: any) {
   const { id } = context.params;
   const body = await req.json();
 
