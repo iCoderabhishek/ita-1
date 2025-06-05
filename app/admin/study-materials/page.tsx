@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Plus,
@@ -15,47 +15,6 @@ import AddEditStudyMaterial from "@/components/study-material/EditStudyMaterial"
 import { toast } from "sonner";
 
 // Dummy study materials data
-const materials = [
-  {
-    id: 1,
-    title: "Digital Electronics Notes",
-    type: "Notes",
-    department: "Electronics and Telecommunication",
-    semester: 3,
-    uploadedBy: "Dr. Robert Johnson",
-    uploadDate: "2024-03-15",
-    downloads: 145,
-    fileUrl: "#",
-    description:
-      "Comprehensive notes covering digital circuit design, Boolean algebra, and sequential logic.",
-  },
-  {
-    id: 2,
-    title: "Programming Lab Manual",
-    type: "Lab Manual",
-    department: "Computer Science & Technology",
-    semester: 2,
-    uploadedBy: "Prof. John Doe",
-    uploadDate: "2024-03-10",
-    downloads: 230,
-    fileUrl: "#",
-    description:
-      "Lab manual for C++ programming practical exercises and assignments.",
-  },
-  {
-    id: 3,
-    title: "Power Systems Syllabus",
-    type: "Syllabus",
-    department: "Electrical Engineering",
-    semester: 4,
-    uploadedBy: "Dr. Jane Smith",
-    uploadDate: "2024-03-05",
-    downloads: 89,
-    fileUrl: "#",
-    description:
-      "Detailed syllabus for Power Systems course including evaluation scheme.",
-  },
-];
 
 const materialTypes = [
   "All Types",
@@ -72,31 +31,101 @@ const departments = [
   "Electronics and Telecommunication",
 ];
 
-const fetchAllStudyMaterials = () => {};
+interface StudyMaterial {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  department: string;
+  semester: string;
+  publisher: string;
+  date: string;
+  important: boolean;
+  link: string;
+  createdAt?: {
+    seconds: number;
+    nanoseconds: number;
+  };
+  updatedAt?: {
+    seconds: number;
+    nanoseconds: number;
+  };
+}
+
 export default function StudyMaterialsPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [materials, setMaterials] = useState<StudyMaterial[]>([]);
   const [selectedType, setSelectedType] = useState("All Types");
   const [selectedDepartment, setSelectedDepartment] =
     useState("All Departments");
   const [showAddModal, setShowAddModal] = useState(false);
-
-  const filteredMaterials = materials.filter(
-    (material) =>
-      (material.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        material.description
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase())) &&
-      (selectedType === "All Types" || material.type === selectedType) &&
-      (selectedDepartment === "All Departments" ||
-        material.department === selectedDepartment)
+  const [editingMaterial, setEditingMaterial] = useState<StudyMaterial | null>(
+    null
   );
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+  const filteredMaterials = materials.filter((material) => {
+    const titleMatch =
+      material.title?.toLowerCase().includes(searchTerm.toLowerCase()) || "";
+    const descMatch =
+      material.content?.toLowerCase().includes(searchTerm.toLowerCase()) || "";
+    const typeMatch =
+      selectedType === "All Types" || material.category === selectedType;
+    const deptMatch =
+      selectedDepartment === "All Departments" ||
+      material.department === selectedDepartment;
+
+    return (titleMatch || descMatch) && typeMatch && deptMatch;
+  });
+
+  const fetchAllStudyMaterials = async () => {
+    try {
+      const res = await fetch("/api/study-materials");
+      const data = await res.json();
+      if (res.ok) {
+        setMaterials(data.studyMaterials); // <-- correct key
+      } else {
+        toast.error(data.error || "Failed to fetch study materials");
+      }
+    } catch (error) {
+      toast.error("Network error while fetching study materials");
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllStudyMaterials();
+  }, []);
+
+  const formatDate = (date: string | Date) => {
+    const d = typeof date === "string" ? new Date(date) : date;
+    return d.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
+  };
+
+  const handleDelete = async (id: string) => {
+    const confirmed = confirm(
+      "Are you sure you want to delete this study material?"
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`/api/study-materials/${id}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete material");
+
+      toast.success("Study Material deleted successfully");
+      fetchAllStudyMaterials();
+    } catch (err) {
+      toast.error("Error deleting material");
+      console.error(err);
+    }
   };
 
   return (
@@ -119,10 +148,15 @@ export default function StudyMaterialsPage() {
       </div>
 
       {/* Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50  flex items-center justify-center bg-black/40">
+      {(showAddModal || editingMaterial) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <AddEditStudyMaterial
-            onClose={() => setShowAddModal(false)}
+            onClose={() => {
+              setShowAddModal(false);
+              setEditingMaterial(null);
+            }}
+            type={editingMaterial ? "edit" : "add"}
+            StudyMaterialData={editingMaterial}
             getAllStudyMaterials={fetchAllStudyMaterials}
             showToastMessage={(msg) => toast.success(msg)}
           />
@@ -191,53 +225,61 @@ export default function StudyMaterialsPage() {
                 </div>
               </div>
               <div className="flex space-x-2">
-                <button className="p-1.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                <button
+                  className="p-1.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  onClick={() => setEditingMaterial(material)}
+                >
                   <Pencil className="h-4 w-4 text-gray-600" />
                 </button>
-                <button className="p-1.5 bg-red-100 rounded-lg hover:bg-red-200 transition-colors">
+                <button
+                  className="p-1.5 bg-red-100 rounded-lg hover:bg-red-200 transition-colors"
+                  onClick={() => handleDelete(material.id)}
+                >
                   <Trash2 className="h-4 w-4 text-red-600" />
                 </button>
               </div>
             </div>
 
-            <p className="text-gray-600 mb-4">{material.description}</p>
+            <p className="text-gray-600 mb-4">{material.content}</p>
 
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="text-sm text-gray-600">
                 <span className="font-medium">Type:</span>{" "}
                 <span className="bg-gray-100 px-2 py-1 rounded-full text-xs">
-                  {material.type}
+                  {material.category}
                 </span>
               </div>
-              <div className="text-sm text-gray-600">
+              {/* <div className="text-sm text-gray-600">
                 <span className="font-medium">Downloads:</span>{" "}
                 <span className="text-primary font-medium">
                   {material.downloads}
                 </span>
-              </div>
+              </div> */}
             </div>
 
             <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
               <div>
                 <span className="font-medium">Uploaded by:</span>{" "}
-                {material.uploadedBy}
+                {material.publisher}
               </div>
               <div>
                 <span className="font-medium">Date:</span>{" "}
-                {formatDate(material.uploadDate)}
+                {material.createdAt
+                  ? formatDate(new Date(material.createdAt.seconds * 1000))
+                  : "N/A"}
               </div>
             </div>
 
             <div className="flex space-x-2">
               <a
-                href={material.fileUrl}
+                href={material.link}
                 className="flex items-center px-3 py-1.5 bg-primary text-white rounded hover:bg-primary/90 transition-colors"
               >
                 <Download className="h-4 w-4 mr-1" />
                 Download
               </a>
               <a
-                href={material.fileUrl}
+                href={material.link}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center px-3 py-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"

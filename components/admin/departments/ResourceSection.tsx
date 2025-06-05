@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pencil, Trash, FileText, Plus } from "lucide-react";
@@ -12,25 +12,34 @@ interface ResourceItem {
   title: string;
   pdfLink: string;
   year?: string;
+  semester?: string;
+  itemType?: string;
+  testType?: string;
 }
 
 interface ResourceSectionProps {
   title: string;
-  items: ResourceItem[];
-  onUpdate: (items: ResourceItem[]) => void;
-  emptyMessage: string;
   resourceType: "syllabus" | "pyq" | "additional";
+  emptyMessage: string;
   showYear?: boolean;
+
+  // New props for fetching
+  departmentId: string;
+  session: string;
+  semester: string;
 }
 
 export default function ResourceSection({
   title,
-  items,
-  onUpdate,
   emptyMessage,
   resourceType,
   showYear = false,
+  departmentId,
+  session,
+  semester,
 }: ResourceSectionProps) {
+  const [items, setItems] = useState<ResourceItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState<ResourceItem | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,42 +54,74 @@ export default function ResourceSection({
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    // Optimistic UI update
-    const updatedItems = items.filter((item) => item.id !== id);
-    onUpdate(updatedItems);
+  useEffect(() => {
+    const fetchItems = async () => {
+      setIsLoading(true);
+      try {
+        const res = await fetch(
+          `/api/academic-resources/${departmentId}?session=${session}&semester=${semester}`
+        );
+        const data = await res.json();
+        setItems(data[resourceType] || []); // Now this will work!
+      } catch (err) {
+        toast.error("Failed to fetch resources");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    // Simulate API call
+    fetchItems();
+  }, [departmentId, session, semester, resourceType]);
+
+  const handleDelete = async (id: string) => {
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      const res = await fetch(
+        `/api/academic-resources/${departmentId}?session=${session}&semester=${semester}&type=${resourceType}&id=${id}`,
+        { method: "DELETE" }
+      );
+      if (!res.ok) throw new Error("Failed to delete resource");
+
+      const updated = await res.json();
+      setItems(updated[resourceType] || []);
       toast.success("Resource deleted successfully");
-    }, 500);
+    } catch (err) {
+      toast.error("Failed to delete resource");
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleSave = (item: ResourceItem) => {
+  const handleSave = async (item: ResourceItem) => {
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      let updatedItems: ResourceItem[];
+    try {
+      const res = await fetch(
+        `/api/academic-resources/${departmentId}?session=${session}&semester=${semester}`,
+        {
+          method: currentItem ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...item,
+            type: resourceType,
+            id: currentItem?.id || undefined,
+          }),
+        }
+      );
 
-      if (currentItem) {
-        // Edit existing item
-        updatedItems = items.map((i) =>
-          i.id === currentItem.id ? { ...item, id: currentItem.id } : i
-        );
-      } else {
-        // Add new item
-        const newId = Date.now().toString();
-        updatedItems = [...items, { ...item, id: newId }];
-      }
+      if (!res.ok) throw new Error("Failed to save resource");
 
-      onUpdate(updatedItems);
-      setIsDialogOpen(false);
-      setIsSubmitting(false);
+      const updated = await res.json();
+      setItems(updated[resourceType] || []);
       toast.success(`${currentItem ? "Updated" : "Added"} successfully`);
-    }, 500);
+      setIsDialogOpen(false);
+    } catch (err) {
+      toast.error("Failed to save resource");
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -103,9 +144,9 @@ export default function ResourceSection({
           </p>
         ) : (
           <div className="space-y-3">
-            {items.map((item) => (
+            {items.map((item, index) => (
               <div
-                key={item.id}
+                key={`${item.id}-${index}`} // composite key with index
                 className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
               >
                 <div className="flex items-center">

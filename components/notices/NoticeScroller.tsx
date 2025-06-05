@@ -4,71 +4,56 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { CalendarClock } from "lucide-react";
 
-// Dummy notices data
-const dummyNotices = [
-  {
-    id: 1,
-    title: "Admission Open for 2025-2026 Session",
-    date: "2025-05-01",
-    important: true,
-  },
-  {
-    id: 2,
-    title: "End Semester Examination Schedule for 6th Semester",
-    date: "2025-04-15",
-    important: true,
-  },
-  {
-    id: 3,
-    title: "Holiday Notice: College will remain closed on 25th April",
-    date: "2025-04-10",
-    important: false,
-  },
-  {
-    id: 4,
-    title: "Diploma Results for December 2024 Announced",
-    date: "2025-03-20",
-    important: true,
-  },
-  {
-    id: 5,
-    title: "Industry Visit for Electrical Engineering Department",
-    date: "2025-03-15",
-    important: false,
-  },
-  {
-    id: 6,
-    title: "National Level Technical Symposium - TechnoVision 2025",
-    date: "2025-03-10",
-    important: true,
-  },
-  {
-    id: 7,
-    title: "Mid-Semester Examination Schedule",
-    date: "2025-03-05",
-    important: false,
-  },
-  {
-    id: 8,
-    title: "Workshop on IoT Applications in Industry",
-    date: "2025-02-28",
-    important: false,
-  },
-];
+type Notice = {
+  id: string;
+  title: string;
+  createdAt: string;
+  isImportant: boolean;
+};
 
-export default function NoticeScroller({ limit = 0 }) {
+export default function NoticeScroller({ limit = 0 }: { limit?: number }) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [notices, setNotices] = useState<Notice[]>([]);
   const [paused, setPaused] = useState(false);
 
-  const notices = limit > 0 ? dummyNotices.slice(0, limit) : dummyNotices;
+  useEffect(() => {
+    const fetchNotices = async () => {
+      try {
+        const res = await fetch("/api/notices"); // Your actual endpoint
+        const json = await res.json();
 
-  const formatDate = (dateString: string) => {
+        // Extract the notices array from the response
+        const notices = json.notices;
+
+        const formatted = limit > 0 ? notices.slice(0, limit) : notices;
+        setNotices(formatted);
+      } catch (error) {
+        console.error("Failed to fetch notices:", error);
+      }
+    };
+
+    fetchNotices();
+  }, [limit]);
+
+  const formatDate = (notice: any) => {
     const options: Intl.DateTimeFormatOptions = {
       year: "numeric",
       month: "short",
       day: "numeric",
     };
-    return new Date(dateString).toLocaleDateString(undefined, options);
+
+    if (notice.date) {
+      return new Date(notice.date).toLocaleDateString(undefined, options);
+    }
+
+    if (notice.createdAt?.seconds) {
+      return new Date(notice.createdAt.seconds * 1000).toLocaleDateString(
+        undefined,
+        options
+      );
+    }
+
+    return "Unknown Date";
   };
 
   useEffect(() => {
@@ -87,10 +72,9 @@ export default function NoticeScroller({ limit = 0 }) {
         ) {
           scrollElement.scrollTop += 1;
         } else if (scrollElement && !paused) {
-          // Reset to top when reached bottom
           scrollElement.scrollTop = 0;
         }
-      }, 50); // Adjust speed as needed
+      }, 50);
     };
 
     startScroll();
@@ -109,7 +93,6 @@ export default function NoticeScroller({ limit = 0 }) {
       <div
         ref={scrollContainerRef}
         className="overflow-y-auto pr-2 max-h-[400px] scroll-smooth"
-        // style={{ scrollBehavior: "smooth" }}
       >
         {notices.map((notice) => (
           <motion.div
@@ -118,17 +101,17 @@ export default function NoticeScroller({ limit = 0 }) {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
             className={`mb-4 p-3 rounded-lg border ${
-              notice.important
+              notice.isImportant
                 ? "border-primary/30 bg-primary/5"
                 : "border-gray-200"
             }`}
           >
             <h3
               className={`font-medium mb-2 ${
-                notice.important ? "text-primary" : "text-gray-800"
+                notice.isImportant ? "text-primary" : "text-gray-800"
               }`}
             >
-              {notice.important && (
+              {notice.isImportant && (
                 <span className="inline-block bg-primary text-white text-xs px-2 py-0.5 rounded mr-2">
                   Important
                 </span>
@@ -137,13 +120,12 @@ export default function NoticeScroller({ limit = 0 }) {
             </h3>
             <div className="flex items-center text-gray-500 text-sm">
               <CalendarClock className="h-3.5 w-3.5 mr-1" />
-              <span>{formatDate(notice.date)}</span>
+              <span>{formatDate(notice)}</span>
             </div>
           </motion.div>
         ))}
       </div>
 
-      {/* Fade gradient at bottom */}
       <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
     </div>
   );

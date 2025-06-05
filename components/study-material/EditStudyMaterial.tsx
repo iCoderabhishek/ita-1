@@ -35,9 +35,14 @@ export default function AddEditStudyMaterial({
   const [newCategory, setNewCategory] = useState("");
   const [content, setContent] = useState(StudyMaterialData?.content || "");
   const [link, setLink] = useState(StudyMaterialData?.link || "");
+  const [semester, setSemester] = useState(StudyMaterialData?.semester || "");
   const [department, setDepartment] = useState(
     StudyMaterialData?.department || ""
   );
+  const [publisher, setPublisher] = useState(
+    StudyMaterialData?.publisher || ""
+  );
+
   const [date, setDate] = useState("");
 
   useEffect(() => {
@@ -62,6 +67,8 @@ export default function AddEditStudyMaterial({
       category: selectedCategory,
       content,
       department,
+      semester,
+      publisher,
       link,
     };
 
@@ -70,15 +77,29 @@ export default function AddEditStudyMaterial({
       data
     );
 
-    // Placeholder logic
-    if (type === "edit") {
-      showToastMessage?.("StudyMaterial updated successfully!");
-    } else {
-      showToastMessage?.("StudyMaterial added successfully!");
-    }
+    try {
+      const res = await fetch("/api/study-materials", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
 
-    getAllStudyMaterials?.();
-    onClose();
+      if (!res.ok) {
+        throw new Error("Failed to submit study material");
+      }
+
+      const responseData = await res.json();
+      console.log("Backend Response:", responseData);
+
+      showToastMessage?.("StudyMaterial saved successfully!");
+      getAllStudyMaterials?.();
+      onClose();
+    } catch (error) {
+      console.error("Submission error:", error);
+      showToastMessage?.("Failed to save study material.");
+    }
   };
 
   const handleAddCategory = () => {
@@ -89,7 +110,7 @@ export default function AddEditStudyMaterial({
   };
 
   return (
-    <div className="relative w-full max-w-3xl bg-white rounded-2xl p-6 shadow-lg mx-auto space-y-5">
+    <div className="relative w-full max-w-2xl bg-white rounded-2xl p-6 shadow-lg mx-auto space-y-1  overflow-x-auto">
       <button
         className="absolute top-3 right-3 text-gray-500 hover:text-red-500"
         onClick={onClose}
@@ -170,8 +191,8 @@ export default function AddEditStudyMaterial({
           Semester<span className="text-red-500">*</span>
         </label>
         <select
-          value={link}
-          onChange={(e) => setLink(e.target.value)}
+          value={semester}
+          onChange={(e) => setSemester(e.target.value)}
           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">Select Semester</option>
@@ -191,15 +212,19 @@ export default function AddEditStudyMaterial({
           Department<span className="text-red-500">*</span>
         </label>
         <select
-          value={link}
-          onChange={(e) => setLink(e.target.value)}
+          value={department}
+          onChange={(e) => setDepartment(e.target.value)}
           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <option value="">Select Department</option>
-          <option value="1">Computer Science & Technology</option>
-          <option value="2">Electrical Engineering</option>
-          <option value="3">Electronics and Telecommunication</option>
-          <option value="4">Others</option>
+          <option value="Others">Select Department</option>
+          <option value="Computer Science & Technology">
+            Computer Science & Technology
+          </option>
+          <option value="Electrical Engineering">Electrical Engineering</option>
+          <option value="Electronics and Telecommunication">
+            Electronics and Telecommunication
+          </option>
+          <option value="Others">Others</option>
         </select>
       </div>
 
@@ -209,8 +234,8 @@ export default function AddEditStudyMaterial({
         </label>
         <input
           type="text"
-          value={link}
-          onChange={(e) => setLink(e.target.value)}
+          value={publisher}
+          onChange={(e) => setPublisher(e.target.value)}
           placeholder="Enter the publisher's name"
           className="w-full p-3 border border-gray-300 rounded-lg"
         />

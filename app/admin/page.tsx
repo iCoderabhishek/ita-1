@@ -16,6 +16,7 @@ import { useEffect, useState } from "react";
 import { auth } from "@/firebase"; // Import auth from your initialized firebase config
 
 import { getAuth, onAuthStateChanged, User } from "firebase/auth";
+import QuickLinks from "@/components/admin/QuickLinks";
 
 // Dummy data for summary cards
 const summaryData = {
@@ -165,71 +166,7 @@ export default function AdminDashboard() {
             </motion.div>
           </div>
 
-          {/* Visitor Stats */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {/* Daily Visitors Chart */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.4 }}
-              className="bg-white p-6 rounded-lg shadow-md border border-gray-100"
-            >
-              <h2 className="text-lg font-semibold mb-4 text-gray-800">
-                Daily Visitors
-              </h2>
-              <div className="min-h-[250px] md:h-[300px]">
-                <VisitorChart />
-              </div>
-            </motion.div>
-
-            {/* Weekly Traffic Chart */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.5 }}
-              className="bg-white p-6 rounded-lg shadow-md border border-gray-100"
-            >
-              <h2 className="text-lg font-semibold mb-4 text-gray-800">
-                Weekly Traffic
-              </h2>
-              <div className="h-[300px]">
-                <WeeklyTrafficChart />
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Additional Analytics */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Popular Pages */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.6 }}
-              className="bg-white p-6 rounded-lg shadow-md border border-gray-100"
-            >
-              <h2 className="text-lg font-semibold mb-4 text-gray-800">
-                Popular Pages
-              </h2>
-              <div className="h-[300px]">
-                <PagePopularityChart />
-              </div>
-            </motion.div>
-
-            {/* Device Distribution */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.7 }}
-              className="bg-white p-6 rounded-lg shadow-md border border-gray-100"
-            >
-              <h2 className="text-lg font-semibold mb-4 text-gray-800">
-                Device Distribution
-              </h2>
-              <div className="h-[300px]">
-                <DeviceDistributionChart />
-              </div>
-            </motion.div>
-          </div>
+          <QuickLinks />
         </>
       )}
     </div>

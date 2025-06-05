@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import ResourceSection from "./ResourceSection";
@@ -8,6 +8,7 @@ import EditableTestTable from "./EditableTestTable";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SemesterData } from "@/types/academic";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import { useParams } from "next/navigation";
 
 // Academic sessions data
 const academicSessions = ["2024-25", "2023-24", "2022-23"];
@@ -113,53 +114,101 @@ export default function AdminAcademicData() {
   const [activeSemester, setActiveSemester] = useState("3rd");
   const [isLoading, setIsLoading] = useState(true);
 
+  const params = useParams(); // Get department ID from the route
+  const departmentId = params?.id as string;
+
+  useEffect(() => {
+    const fetchAcademicData = async () => {
+      setIsLoading(true);
+      try {
+        const res = await fetch(
+          `/api/academic-resources/${departmentId}?session=${activeSession}&semester=${activeSemester}`
+        );
+        const json = await res.json();
+
+        // Directly access the data by keys
+        const syllabusItems = json.syllabus || [];
+        const pyqItems = json.pyqs || [];
+        const additionalPdfs = json.additional || [];
+        const tests = json.tests || [];
+
+        setSemesterData((prev) => ({
+          ...prev,
+          [activeSession]: {
+            ...prev[activeSession],
+            [activeSemester]: {
+              syllabusItems,
+              pyqItems,
+              additionalPdfs,
+              tests,
+              isLoading: false,
+            },
+          },
+        }));
+      } catch (err) {
+        console.error("Failed to fetch academic data", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAcademicData();
+  }, [activeSession, activeSemester, departmentId]);
+
   // Simulate data loading
-  useState(() => {
-    setTimeout(() => {
+  useEffect(() => {
+    // ⚠️ Optional: only use this mock in dev or fallback
+    const loadFallbackData = () => {
       const loadedData = {
         ...initialSemesterData,
         "2024-25": {
           ...initialSemesterData["2024-25"],
-          "3rd": {
-            syllabusItems: [
-              {
-                id: "1",
-                title: "Computer Science Syllabus",
-                pdfLink: "https://example.com/cs-syllabus.pdf",
-              },
-            ],
-            pyqItems: [
-              {
-                id: "1",
-                title: "Database Management Systems",
-                year: "2023",
-                pdfLink: "https://example.com/dbms-pyq.pdf",
-              },
-            ],
-            additionalPdfs: [
-              {
-                id: "1",
-                title: "Programming Reference",
-                pdfLink: "https://example.com/programming-ref.pdf",
-              },
-            ],
-            tests: [
-              {
-                id: "1",
-                subject: "Data Structures",
-                testType: "Mid-term",
-                examDate: "2024-05-15",
-                questions: "https://example.com/ds-midterm.pdf",
-              },
-            ],
-            isLoading: false,
-          },
+          // "3rd":
+          // {
+
+          //   syllabusItems: [
+          //     {
+          //       id: "1",
+          //       title: "Computer Science Syllabus",
+          //       pdfLink: "https://example.com/cs-syllabus.pdf",
+          //     },
+          //   ],
+          //   pyqItems: [
+          //     {
+          //       id: "1",
+          //       title: "Database Management Systems",
+          //       year: "2023",
+          //       pdfLink: "https://example.com/dbms-pyq.pdf",
+          //     },
+          //   ],
+          //   additionalPdfs: [
+          //     {
+          //       id: "1",
+          //       title: "Programming Reference",
+          //       pdfLink: "https://example.com/programming-ref.pdf",
+          //     },
+          //   ],
+          //   tests: [
+          //     {
+          //       id: "1",
+          //       subject: "Data Structures",
+          //       testType: "Mid-term",
+          //       examDate: "2024-05-15",
+          //       questions: "https://example.com/ds-midterm.pdf",
+          //     },
+          //   ],
+          //   isLoading: false,
+          // },
         },
       };
       setSemesterData(loadedData);
       setIsLoading(false);
-    }, 1500);
-  });
+    };
+
+    // Fallback loading
+    const timer = setTimeout(loadFallbackData, 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleSessionChange = (session: string) => {
     setActiveSession(session);
@@ -220,7 +269,7 @@ export default function AdminAcademicData() {
   };
 
   // Update functions for each section
-  const updateSyllabusItems = (items: any[]) => {
+  const updateSyllabusItems = async (items: any[]) => {
     setSemesterData((prev) => ({
       ...prev,
       [activeSession]: {
@@ -231,9 +280,21 @@ export default function AdminAcademicData() {
         },
       },
     }));
+
+    // Sync with backend
+    await fetch(`/api/academic-resources/${departmentId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session: activeSession,
+        semester: activeSemester,
+        type: "syllabus",
+        data: items,
+      }),
+    });
   };
 
-  const updatePyqItems = (items: any[]) => {
+  const updatePyqItems = async (items: any[]) => {
     setSemesterData((prev) => ({
       ...prev,
       [activeSession]: {
@@ -244,9 +305,21 @@ export default function AdminAcademicData() {
         },
       },
     }));
+
+    // Sync with backend
+    await fetch(`/api/academic-resources/${departmentId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session: activeSession,
+        semester: activeSemester,
+        type: "pyq",
+        data: items,
+      }),
+    });
   };
 
-  const updateAdditionalPdfs = (items: any[]) => {
+  const updateAdditionalPdfs = async (items: any[]) => {
     setSemesterData((prev) => ({
       ...prev,
       [activeSession]: {
@@ -257,9 +330,21 @@ export default function AdminAcademicData() {
         },
       },
     }));
+
+    // Sync with backend
+    await fetch(`/api/academic-resources/${departmentId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session: activeSession,
+        semester: activeSemester,
+        type: "additional",
+        data: items,
+      }),
+    });
   };
 
-  const updateTests = (tests: any[]) => {
+  const updateTests = async (tests: any[]) => {
     setSemesterData((prev) => ({
       ...prev,
       [activeSession]: {
@@ -270,6 +355,18 @@ export default function AdminAcademicData() {
         },
       },
     }));
+
+    // Sync with backend
+    await fetch(`/api/academic-resources/${departmentId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session: activeSession,
+        semester: activeSemester,
+        type: "tests",
+        data: tests,
+      }),
+    });
   };
 
   if (isLoading) {
@@ -325,27 +422,30 @@ export default function AdminAcademicData() {
                   <>
                     <ResourceSection
                       title="Syllabus"
-                      items={currentData.syllabusItems}
-                      onUpdate={updateSyllabusItems}
                       emptyMessage="No syllabus documents available"
                       resourceType="syllabus"
+                      departmentId={departmentId}
+                      session={activeSession}
+                      semester={semester}
                     />
 
                     <ResourceSection
                       title="Previous Year Questions (PYQs)"
-                      items={currentData.pyqItems}
-                      onUpdate={updatePyqItems}
                       emptyMessage="No previous year questions available"
                       resourceType="pyq"
                       showYear
+                      departmentId={departmentId}
+                      session={activeSession}
+                      semester={semester}
                     />
 
                     <ResourceSection
                       title="Additional PDFs"
-                      items={currentData.additionalPdfs}
-                      onUpdate={updateAdditionalPdfs}
                       emptyMessage="No additional documents available"
                       resourceType="additional"
+                      departmentId={departmentId}
+                      session={activeSession}
+                      semester={semester}
                     />
 
                     <EditableTestTable
