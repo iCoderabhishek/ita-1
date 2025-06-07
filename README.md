@@ -1,5 +1,4 @@
 
-```markdown
 # IGP College Website
 
 A fully functional and responsive college website built using **Next.js** and **Firebase**. This site is designed for both public visitors and admins to manage academic content, faculty information, notices, and more.
@@ -172,6 +171,4 @@ For major changes, please open an issue first to discuss the scope and direction
 
 Developed and maintained by **Abhishek**
 GitHub: [iCoderabhishek](https://github.com/iCoderabhishek)
-
-```
-
+Starts appriciated!
