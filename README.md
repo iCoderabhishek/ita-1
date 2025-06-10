@@ -7,12 +7,11 @@ A fully functional and responsive college website built using **Next.js** and **
 
 ## Live Demo
 
-If deployed, access the site here:
+Access the site here:
 
 ```
 
-https\://<your-vercel-or-custom-domain>
-
+(https://igp-college-website.vercel.app/)
 ````
 
 ---
