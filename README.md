@@ -11,8 +11,8 @@ Access the site here:
 
 ```
 
-(https://igp-college-website.vercel.app/)
-````
+https://igp-college-website.vercel.app/
+```
 
 ---
 
